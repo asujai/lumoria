@@ -1,0 +1,41 @@
+﻿Analyzing mobil pdf ai...                                       
+
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\screens\home_shell.dart:34:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\screens\library_screen.dart:127:66 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\screens\library_screen.dart:134:68 - deprecated_member_use
+  error - Arguments of a constant creation must be constant expressions - lib\ui\screens\pdf_view_screen.dart:63:72 - const_with_non_constant_argument
+  error - Expected to find ',' - lib\ui\screens\pdf_view_screen.dart:63:72 - expected_token
+  error - Too many positional arguments: 1 expected, but 5 found - lib\ui\screens\pdf_view_screen.dart:63:72 - extra_positional_arguments_could_be_named
+  error - Undefined name 'dan' - lib\ui\screens\pdf_view_screen.dart:63:72 - undefined_identifier
+  error - Arguments of a constant creation must be constant expressions - lib\ui\screens\pdf_view_screen.dart:63:76 - const_with_non_constant_argument
+  error - Expected to find ',' - lib\ui\screens\pdf_view_screen.dart:63:76 - expected_token
+  error - Undefined name 'API' - lib\ui\screens\pdf_view_screen.dart:63:76 - undefined_identifier
+  error - Arguments of a constant creation must be constant expressions - lib\ui\screens\pdf_view_screen.dart:63:80 - const_with_non_constant_argument
+  error - Expected to find ',' - lib\ui\screens\pdf_view_screen.dart:63:80 - expected_token
+  error - Undefined name 'Anahtar─▒' - lib\ui\screens\pdf_view_screen.dart:63:80 - undefined_identifier
+  error - Illegal character '305' - lib\ui\screens\pdf_view_screen.dart:63:87 - illegal_character
+  error - Expected to find ',' - lib\ui\screens\pdf_view_screen.dart:63:89 - expected_token
+  error - Invalid constant value - lib\ui\screens\pdf_view_screen.dart:63:89 - invalid_constant
+  error - Undefined name 'girin' - lib\ui\screens\pdf_view_screen.dart:63:89 - undefined_identifier
+  error - Expected an identifier - lib\ui\screens\pdf_view_screen.dart:63:95 - missing_identifier
+  error - Unterminated string literal - lib\ui\screens\pdf_view_screen.dart:63:98 - unterminated_string_literal
+  error - Expected to find ')' - lib\ui\screens\pdf_view_screen.dart:64:19 - expected_token
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\screens\settings_screen.dart:106:41 - deprecated_member_use
+  error - The argument type 'CardTheme' can't be assigned to the parameter type 'CardThemeData?'.  - lib\ui\theme\app_theme.dart:38:16 - argument_type_not_assignable
+  error - The argument type 'CardTheme' can't be assigned to the parameter type 'CardThemeData?'.  - lib\ui\theme\app_theme.dart:76:16 - argument_type_not_assignable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\widgets\analysis_modal.dart:106:50 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\widgets\analysis_modal.dart:116:48 - deprecated_member_use
+  error - The method 'BorderLeft' isn't defined for the type '_AnalysisModalState' - lib\ui\widgets\analysis_modal.dart:118:23 - undefined_method
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\widgets\analysis_modal.dart:120:50 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\widgets\analysis_modal.dart:153:41 - deprecated_member_use
+warning - The value of the local variable 'date' isn't used - lib\ui\widgets\library_item_card.dart:17:11 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\widgets\library_item_card.dart:35:56 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\widgets\library_item_card.dart:53:50 - deprecated_member_use
+  error - The method 'BorderLeft' isn't defined for the type 'LibraryItemCard' - lib\ui\widgets\library_item_card.dart:55:25 - undefined_method
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\widgets\library_item_card.dart:57:52 - deprecated_member_use
+  error - Expected to find ',' - lib\ui\widgets\library_item_card.dart:61:28 - expected_token
+  error - Too many positional arguments: 1 expected, but 3 found - lib\ui\widgets\library_item_card.dart:61:28 - extra_positional_arguments_could_be_named
+  error - Undefined name 'originalText' - lib\ui\widgets\library_item_card.dart:61:28 - undefined_identifier
+  error - Expected to find ',' - lib\ui\widgets\library_item_card.dart:61:40 - expected_token
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\ui\widgets\library_item_card.dart:82:41 - deprecated_member_use
+
