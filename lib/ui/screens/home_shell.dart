@@ -4,7 +4,9 @@ import 'pdf_view_screen.dart';
 import 'library_screen.dart';
 import 'settings_screen.dart';
 import '../../core/services/settings_service.dart';
+import '../../core/services/secure_storage_service.dart';
 import '../widgets/lumoria_logo.dart';
+import 'api_key_setup_screen.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -24,6 +26,18 @@ class _HomeShellState extends State<HomeShell> {
 
   @override
   Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: SecureStorageService().hasApiKeyNotifier,
+      builder: (context, hasKey, child) {
+        if (!hasKey) {
+          return const ApiKeySetupScreen();
+        }
+        return _buildMainScaffold(context);
+      },
+    );
+  }
+
+  Widget _buildMainScaffold(BuildContext context) {
     final theme = Theme.of(context);
     final isWideScreen = MediaQuery.sizeOf(context).width > 600;
 

@@ -90,14 +90,12 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
       if (mounted && _selectedPdfFile != null) {
         bool shouldSave = false;
 
-        setState(() {
-          _totalUnsavedSeconds++;
-          if (_isTimerRunning) {
-            _elapsedSeconds++;
-            _unsavedSeconds++;
-            SettingsService.activeSessionTime.value = _unsavedSeconds;
-          }
-        });
+        _totalUnsavedSeconds++;
+        if (_isTimerRunning) {
+          _elapsedSeconds++;
+          _unsavedSeconds++;
+          SettingsService.activeSessionTime.value = _elapsedSeconds;
+        }
 
         if (_unsavedSeconds >= 5 || _totalUnsavedSeconds >= 5) {
           shouldSave = true;
@@ -108,7 +106,6 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
               .savePdfSession(_pdfName, _unsavedSeconds, _totalUnsavedSeconds);
           _unsavedSeconds = 0;
           _totalUnsavedSeconds = 0;
-          SettingsService.activeSessionTime.value = 0;
         }
       }
     });
@@ -186,6 +183,30 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
           _startMasterTimer();
         });
       }
+    }
+  }
+
+  void _closePdf() {
+    _saveSession();
+    _sessionTimer?.cancel();
+    _hideTooltip();
+    if (mounted) {
+      setState(() {
+        _selectedPdfFile = null;
+        _pdfName = 'pdf_unknown'.tr();
+        _isLibraryPdf = false;
+        _selectedTextNotifier.value = null;
+        _selectedTextRectNotifier.value = null;
+        _isSearching = false;
+        _searchController.clear();
+        _searchResult.clear();
+        _elapsedSeconds = 0;
+        _unsavedSeconds = 0;
+        _totalUnsavedSeconds = 0;
+        _isTimerRunning = false;
+        SettingsService.activeSessionTime.value = 0;
+      });
+      _loadRecentPdfs();
     }
   }
 
@@ -437,9 +458,9 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
     return viewer;
   }
 
-  Widget _buildTimerButton(ThemeData theme) {
+  Widget _buildTimerButton(ThemeData theme, int elapsed) {
     final isRunning = _isTimerRunning;
-    final d = Duration(seconds: _elapsedSeconds);
+    final d = Duration(seconds: elapsed);
     final hours = d.inHours;
     final mins = d.inMinutes.remainder(60);
     final secs = d.inSeconds.remainder(60);
@@ -510,6 +531,16 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
           return Scaffold(
             appBar: _selectedPdfFile != null
                 ? AppBar(
+                    leading: IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () {
+                        if (Navigator.canPop(context)) {
+                          Navigator.pop(context);
+                        } else {
+                          _closePdf();
+                        }
+                      },
+                    ),
                     title: _isSearching
                         ? TextField(
                             controller: _searchController,
@@ -729,7 +760,13 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
                                     _timerPosition = Offset(dx, dy);
                                   });
                                 },
-                                child: _buildTimerButton(theme),
+                                child: ValueListenableBuilder<int>(
+                                  valueListenable:
+                                      SettingsService.activeSessionTime,
+                                  builder: (context, elapsed, _) {
+                                    return _buildTimerButton(theme, elapsed);
+                                  },
+                                ),
                               ),
                             ),
                           if (selectedText != null)

@@ -12,6 +12,7 @@ import 'ui/theme/app_theme.dart';
 import 'ui/screens/home_shell.dart';
 import 'ui/screens/onboarding_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'core/services/secure_storage_service.dart';
 import 'core/config/env.dart';
 import 'ui/screens/auth_screen.dart';
 
@@ -45,6 +46,7 @@ void main() async {
 
   await EasyLocalization.ensureInitialized();
   await SettingsService().loadSettings();
+  await SecureStorageService().init();
   await PurchaseService().init();
 
   final prefs = await SharedPreferences.getInstance();
