@@ -19,7 +19,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
   List<Map<String, dynamic>> _filteredArtifacts = [];
   bool _isLoading = true;
   String _searchQuery = '';
-  String _currentFilter = 'all'; // 'all', 'pdfs', 'pdf', 'date'
+  String _currentFilter = 'notes'; // 'notes', 'pdfs'
   bool _hideAllAnswers = false;
 
   @override
@@ -58,15 +58,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
       }).toList();
     }
 
-    if (_currentFilter == 'pdfs') {
+    if (_currentFilter == 'notes') {
+      current = current.where((item) => item['type'] != 'pdf').toList();
+    } else if (_currentFilter == 'pdfs') {
       current = current.where((item) => item['type'] == 'pdf').toList();
-    } else if (_currentFilter == 'pdf') {
-      current = current.where((item) => item['type'] == 'pdf').toList();
-      current.sort(
-          (a, b) => (a['pdfName'] as String).compareTo(b['pdfName'] as String));
-    } else if (_currentFilter == 'date') {
-      current
-          .sort((a, b) => (b['date'] as String).compareTo(a['date'] as String));
     }
 
     setState(() {
@@ -133,7 +128,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   'originalText': original,
                   'aiExplanation': explanation,
                   'date': DateTime.now().toIso8601String(),
-                  'pdfName': 'Manuel Not',
+                  'pdfName': 'pdf_manual_note'.tr(),
                 });
                 if (!context.mounted) return;
                 Navigator.pop(context);
@@ -275,7 +270,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
           IconButton(
             icon:
                 Icon(_hideAllAnswers ? Icons.visibility_off : Icons.visibility),
-            tooltip: _hideAllAnswers ? 'Show all answers' : 'Hide all answers',
+            tooltip: _hideAllAnswers
+                ? 'library_btn_show_answers'.tr()
+                : 'library_btn_hide_answers'.tr(),
             onPressed: () {
               setState(() {
                 _hideAllAnswers = !_hideAllAnswers;
@@ -340,14 +337,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           GestureDetector(
                             onTap: () {
                               setState(() {
-                                _currentFilter = 'all';
+                                _currentFilter = 'notes';
                                 _applyFilters();
                               });
                             },
                             child: _buildFilterChip(
                                 theme,
                                 'library_filter_all'.tr(),
-                                _currentFilter == 'all'),
+                                _currentFilter == 'notes'),
                           ),
                           const SizedBox(width: 8),
                           GestureDetector(
@@ -361,32 +358,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
                                 theme,
                                 'library_filter_pdfs'.tr(),
                                 _currentFilter == 'pdfs'),
-                          ),
-                          const SizedBox(width: 8),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _currentFilter = 'pdf';
-                                _applyFilters();
-                              });
-                            },
-                            child: _buildFilterChip(
-                                theme,
-                                'library_filter_pdf'.tr(),
-                                _currentFilter == 'pdf'),
-                          ),
-                          const SizedBox(width: 8),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _currentFilter = 'date';
-                                _applyFilters();
-                              });
-                            },
-                            child: _buildFilterChip(
-                                theme,
-                                'library_filter_date'.tr(),
-                                _currentFilter == 'date'),
                           ),
                         ],
                       ),
@@ -513,7 +484,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        fileExists ? formattedDate : 'Dosya bulunamadı',
+                        fileExists
+                            ? formattedDate
+                            : 'library_err_not_found'.tr(),
                         style: TextStyle(
                           fontSize: 12,
                           color: fileExists

@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../config/env.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'secure_storage_service.dart';
 import 'settings_service.dart';
 
@@ -17,7 +17,7 @@ class GeminiService {
     if (localApiKey != null && localApiKey.isNotEmpty) {
       return localApiKey;
     }
-    return Env.apiKey;
+    throw Exception('gemini_err_no_key_desc'.tr());
   }
 
   Future<String> explainContextualText(String selectedText) async {
@@ -25,7 +25,7 @@ class GeminiService {
       final apiKey = await _getApiKey();
 
       if (apiKey.isEmpty) {
-        throw Exception('API Anahtarı bulunamadı.');
+        throw Exception('gemini_err_no_key'.tr());
       }
 
       final langInstruction = _settingsService.languagePromptInstruction;
@@ -38,17 +38,11 @@ class GeminiService {
           {
             'parts': [
               {
-                'text': '''
-$langInstruction
-
-Aşağıdaki kelime veya kelime grubunun anlamını sade, net ve eksiksiz bir şekilde açıkla.
-Kullanıcının Seçtiği Çalışma Alanı: "$fieldOfStudy"
-Lütfen kelimeyi öncelikli olarak bu çalışma alanındaki (eğer varsa) anlamıyla açıkla. Eğer bu alanla ilgili özel bir anlamı yoksa, kelimenin en yaygın genel anlamını ver.
-Sadece hedeflenen anlamı ver; gereksiz ansiklopedik veya süslü detaylardan, derin teknik analizlerden kaçın. Cevap mümkün olduğunca kısa ve öz olsun.
-Fakat AÇIKLAMANIN ASLA YARIM KALMAMASINA ve cümlenin mantıklı bir şekilde tamamlanmasına ÇOK DİKKAT ET.
-Metin:
-"$selectedText"
-'''
+                'text': 'prompt_template'.tr(namedArgs: {
+                  'langInstruction': langInstruction,
+                  'fieldOfStudy': fieldOfStudy,
+                  'selectedText': selectedText,
+                })
               }
             ]
           }
@@ -68,15 +62,16 @@ Metin:
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final text = data['candidates']?[0]?['content']?['parts']?[0]?['text'];
-        return text ?? 'Açıklama üretilemedi.';
+        return text ?? 'gemini_err_no_desc'.tr();
       } else {
         final errorData = jsonDecode(response.body);
-        final errorMsg = errorData['error']?['message'] ?? 'Bilinmeyen hata';
-        throw Exception('Gemini API Hatası: $errorMsg');
+        final errorMsg =
+            errorData['error']?['message'] ?? 'gemini_err_unknown'.tr();
+        throw Exception('gemini_err_api'.tr(args: [errorMsg.toString()]));
       }
     } catch (e) {
       if (e is Exception) rethrow;
-      throw Exception('Analiz sırasında bir hata oluştu: $e');
+      throw Exception('gemini_err_general'.tr(args: [e.toString()]));
     }
   }
 }

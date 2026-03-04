@@ -1,4 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:easy_localization/easy_localization.dart';
+import '../config/env.dart';
 
 class AuthService {
   static final AuthService _instance = AuthService._internal();
@@ -13,14 +16,14 @@ class AuthService {
       return null; // Başarılı
     } on AuthException catch (e) {
       if (e.message.contains('Invalid login credentials')) {
-        return 'E-posta veya şifre hatalı.';
+        return 'auth_err_wrong_cred'.tr();
       }
       if (e.message.toLowerCase().contains('email not confirmed')) {
-        return 'E-posta adresiniz onaylanmamış. Lütfen doğrulayın veya Supabase ayarlarından kapatın.';
+        return 'auth_err_unconfirmed'.tr();
       }
       return e.message;
     } catch (e) {
-      return 'Giriş yapılamadı: $e';
+      return 'auth_err_login_fail'.tr(args: [e.toString()]);
     }
   }
 
@@ -29,30 +32,64 @@ class AuthService {
       final response =
           await _supabase.auth.signUp(email: email, password: password);
       if (response.session == null) {
-        return 'Kayıt başarılı! Ancak Supabase ayarlarında e-posta onayı açık. Lütfen gelen kutunuzu kontrol edin veya Supabase ayarlarından Kapatın.';
+        return 'auth_succ_reg'.tr();
       }
       return null; // Başarılı, giriş yapıldı
     } on AuthException catch (e) {
       if (e.message.contains('User already registered')) {
-        return 'Bu e-posta adresi zaten kullanılıyor.';
+        return 'auth_err_in_use'.tr();
       }
       return e.message;
     } catch (e) {
-      return 'Kayıt olunamadı: $e';
+      return 'auth_err_reg_fail'.tr(args: [e.toString()]);
     }
   }
 
   Future<String?> loginWithGoogle() async {
     try {
-      await _supabase.auth.signInWithOAuth(OAuthProvider.google);
+      final webClientId = Env.googleWebClientId;
+      if (webClientId.isEmpty) {
+        return 'auth_err_google_no_id'.tr();
+      }
+
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        serverClientId: webClientId,
+      );
+      final googleUser = await googleSignIn.signIn();
+
+      if (googleUser == null) {
+        return 'auth_err_google_cancel'.tr();
+      }
+
+      final googleAuth = await googleUser.authentication;
+      final accessToken = googleAuth.accessToken;
+      final idToken = googleAuth.idToken;
+
+      if (accessToken == null || idToken == null) {
+        return 'auth_err_google_tokens'.tr();
+      }
+
+      await _supabase.auth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: idToken,
+        accessToken: accessToken,
+      );
+
       return null;
     } catch (e) {
-      return 'Google girişi sırasında bir hata oluştu.';
+      if (e.toString().contains('sign_in_canceled')) {
+        return 'auth_err_google_cancel'.tr();
+      }
+      return 'auth_err_google_fail'.tr(args: [e.toString()]);
     }
   }
 
   Future<void> logout() async {
     try {
+      final googleSignIn = GoogleSignIn();
+      if (await googleSignIn.isSignedIn()) {
+        await googleSignIn.signOut();
+      }
       await _supabase.auth.signOut();
     } catch (_) {}
   }

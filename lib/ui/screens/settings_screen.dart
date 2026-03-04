@@ -61,16 +61,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   String _formatDuration(int seconds) {
-    if (seconds == 0) return '0 sn';
+    if (seconds == 0) return 'timer_seconds'.tr(args: ['0']);
     final duration = Duration(seconds: seconds);
     final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60);
     final secs = duration.inSeconds.remainder(60);
 
     List<String> parts = [];
-    if (hours > 0) parts.add('$hours saat');
-    if (minutes > 0) parts.add('$minutes dk');
-    if (secs > 0) parts.add('$secs sn');
+    if (hours > 0) parts.add('timer_hours'.tr(args: [hours.toString()]));
+    if (minutes > 0) parts.add('timer_minutes'.tr(args: [minutes.toString()]));
+    if (secs > 0 || parts.isEmpty) {
+      parts.add('timer_seconds'.tr(args: [secs.toString()]));
+    }
 
     return parts.join(' ');
   }
@@ -163,7 +165,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         )
                       ],
                     ),
-                    ..._pdfStats.map((stat) => _buildPdfStatCard(stat, theme)),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 300),
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        physics: const ClampingScrollPhysics(),
+                        itemCount: _pdfStats.length,
+                        itemBuilder: (context, index) {
+                          return _buildPdfStatCard(_pdfStats[index], theme);
+                        },
+                      ),
+                    ),
                     const SizedBox(height: 32),
                   ],
 
@@ -252,31 +264,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           icon: Icons.language,
                           title: 'settings_doc_lang'.tr(),
                           subtitle: 'settings_doc_lang_sub'.tr(),
-                          trailing: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: _settingsService.language,
-                              isDense: true,
-                              icon: Icon(Icons.unfold_more,
-                                  color: theme.colorScheme.onSurfaceVariant),
-                              style: TextStyle(
-                                  color: theme.colorScheme.onSurface,
-                                  fontWeight: FontWeight.w500),
-                              items: const [
-                                DropdownMenuItem(
-                                    value: 'tr', child: Text('TR')),
-                                DropdownMenuItem(
-                                    value: 'en', child: Text('EN')),
-                                DropdownMenuItem(
-                                    value: 'de', child: Text('DE')),
+                          trailing: TextButton(
+                            onPressed: () => _showLanguagePicker(context),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _settingsService.languageLabel,
+                                  style: TextStyle(
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Icon(Icons.unfold_more,
+                                    size: 16, color: theme.colorScheme.primary),
                               ],
-                              onChanged: (v) {
-                                if (v != null) {
-                                  // avoid switching if DE because no JSON file
-                                  if (v == 'de') return;
-                                  _settingsService.setLanguage(v);
-                                  context.setLocale(Locale(v));
-                                }
-                              },
                             ),
                           ),
                         ),
@@ -323,6 +327,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                         ),
                       ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // ── PDF TIMER TOGGLE ──
+                  Container(
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                          color: theme.colorScheme.surfaceContainerHighest),
+                    ),
+                    child: _settingsTile(
+                      theme: theme,
+                      icon: Icons.timer_outlined,
+                      title: 'settings_show_timer'.tr(),
+                      subtitle: 'settings_show_timer_sub'.tr(),
+                      trailing: Switch.adaptive(
+                        value: _settingsService.showTimerIcon,
+                        onChanged: (v) => _settingsService.setShowTimerIcon(v),
+                        activeTrackColor: theme.colorScheme.primary,
+                      ),
                     ),
                   ),
 
@@ -503,7 +530,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Column(
                   children: [
                     Text(
-                      'Aktif Süre',
+                      'settings_stat_active'.tr(),
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -532,7 +559,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Column(
                   children: [
                     Text(
-                      'Arka Plan',
+                      'settings_stat_bg'.tr(),
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -590,7 +617,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'Aktif: ${_formatDuration(stat['activeSeconds'] as int)}',
+                'settings_stat_active_prefix'
+                    .tr(args: [_formatDuration(stat['activeSeconds'] as int)]),
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -598,7 +626,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               Text(
-                'Arka: ${_formatDuration(stat['backgroundSeconds'] as int)}',
+                'settings_stat_bg_prefix'.tr(
+                    args: [_formatDuration(stat['backgroundSeconds'] as int)]),
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -655,6 +684,103 @@ class _SettingsScreenState extends State<SettingsScreen> {
           if (trailing != null) trailing,
         ],
       ),
+    );
+  }
+
+  void _showLanguagePicker(BuildContext context) {
+    final theme = Theme.of(context);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.65,
+          maxChildSize: 0.90,
+          minChildSize: 0.4,
+          expand: false,
+          builder: (_, scrollController) {
+            return Column(
+              children: [
+                const SizedBox(height: 12),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  child: Row(
+                    children: [
+                      Icon(Icons.language,
+                          color: theme.colorScheme.primary, size: 22),
+                      const SizedBox(width: 10),
+                      Text(
+                        'settings_doc_lang'.tr(),
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Divider(
+                    height: 1,
+                    color: theme.colorScheme.surfaceContainerHighest),
+                Expanded(
+                  child: ListView(
+                    controller: scrollController,
+                    children:
+                        SettingsService.supportedLanguages.entries.map((entry) {
+                      final isSelected = _settingsService.language == entry.key;
+                      return ListTile(
+                        leading: Icon(
+                          isSelected
+                              ? Icons.check_circle
+                              : Icons.radio_button_unchecked,
+                          color: isSelected
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.onSurfaceVariant,
+                          size: 22,
+                        ),
+                        title: Text(
+                          entry.value,
+                          style: TextStyle(
+                            fontWeight: isSelected
+                                ? FontWeight.w700
+                                : FontWeight.normal,
+                            color: isSelected
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.onSurface,
+                          ),
+                        ),
+                        onTap: () {
+                          _settingsService.setLanguage(entry.key);
+                          if (entry.key == 'tr') {
+                            ctx.setLocale(const Locale('tr'));
+                          } else {
+                            ctx.setLocale(const Locale('en'));
+                          }
+                          Navigator.pop(ctx);
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 

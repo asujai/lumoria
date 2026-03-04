@@ -3,6 +3,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'pdf_view_screen.dart';
 import 'library_screen.dart';
 import 'settings_screen.dart';
+import '../../core/services/settings_service.dart';
+import '../widgets/lumoria_logo.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -105,56 +107,9 @@ class _HomeShellState extends State<HomeShell> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Header Log
-          Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary,
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(Icons.auto_stories,
-                      color: Colors.white, size: 22),
-                ),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Lumoria',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.5,
-                        color: theme.colorScheme.onSurface,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
-                    Text(
-                      'PREMIUM',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.5,
-                        color: theme.colorScheme.primary,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+          const Padding(
+            padding: EdgeInsets.all(24.0),
+            child: LumoriaLogo(iconSize: 32, fontSize: 20),
           ),
 
           // Navigation
@@ -162,77 +117,127 @@ class _HomeShellState extends State<HomeShell> {
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               children: [
-                _buildSidebarItem(0, Icons.home_rounded, 'Ana Sayfa', theme),
+                _buildSidebarItem(
+                    0, Icons.home_rounded, 'home_tab'.tr(), theme),
                 const SizedBox(height: 4),
                 _buildSidebarItem(
-                    1, Icons.library_books_rounded, 'Kütüphane', theme),
+                    1, Icons.library_books_rounded, 'library_tab'.tr(), theme),
                 const SizedBox(height: 4),
-                _buildSidebarItem(2, Icons.settings_rounded, 'Ayarlar', theme),
+                _buildSidebarItem(
+                    2, Icons.settings_rounded, 'settings_tab'.tr(), theme),
               ],
             ),
           ),
 
           // User profile at bottom
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  width: 1,
+          ListenableBuilder(
+            listenable: SettingsService(),
+            builder: (context, _) {
+              final userName =
+                  SettingsService().userName ?? 'home_lbl_username'.tr();
+              final userTitle =
+                  SettingsService().userTitle ?? 'home_lbl_title'.tr();
+
+              return InkWell(
+                onTap: () {
+                  _showProfileDialog(context);
+                },
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.03)
+                        : Colors.black.withValues(alpha: 0.03),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color:
+                              theme.colorScheme.primary.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.person,
+                            color: theme.colorScheme.primary, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              userName,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.onSurface,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              userTitle.toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.5,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showProfileDialog(BuildContext context) {
+    final nameController =
+        TextEditingController(text: SettingsService().userName);
+    final titleController =
+        TextEditingController(text: SettingsService().userTitle);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('home_dlg_profile'.tr()),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: InputDecoration(labelText: 'home_lbl_fullname'.tr()),
             ),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.03)
-                    : Colors.black.withValues(alpha: 0.03),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(Icons.person,
-                        color: theme.colorScheme.primary, size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Dr. Aras Demir',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: theme.colorScheme.onSurface,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          'ARAŞTIRMACI',
-                          style: TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.5,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: titleController,
+              decoration: InputDecoration(labelText: 'home_lbl_jobtitle'.tr()),
             ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('general_btn_cancel'.tr()),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              SettingsService().setUserName(nameController.text.trim());
+              SettingsService().setUserTitle(titleController.text.trim());
+              Navigator.pop(context);
+            },
+            child: Text('general_btn_save'.tr()),
           ),
         ],
       ),
@@ -258,17 +263,9 @@ class _HomeShellState extends State<HomeShell> {
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
             border: isSelected
-                ? Border(
-                    left: const BorderSide(color: Color(0xFF257BF4), width: 3),
-                    top: BorderSide(
-                        color:
-                            theme.colorScheme.primary.withValues(alpha: 0.2)),
-                    right: BorderSide(
-                        color:
-                            theme.colorScheme.primary.withValues(alpha: 0.2)),
-                    bottom: BorderSide(
-                        color:
-                            theme.colorScheme.primary.withValues(alpha: 0.2)),
+                ? Border.all(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                    width: 1,
                   )
                 : null,
           ),

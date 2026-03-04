@@ -5,9 +5,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 import '../../core/services/settings_service.dart';
 import '../../core/services/auth_service.dart';
+import '../widgets/lumoria_logo.dart';
 import 'home_shell.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -66,7 +68,7 @@ class _AuthScreenState extends State<AuthScreen> {
   void _login() async {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lütfen email ve şifre girin.')),
+        SnackBar(content: Text('auth_err_email_pass'.tr())),
       );
       return;
     }
@@ -90,7 +92,8 @@ class _AuthScreenState extends State<AuthScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Giriş başarısız: $e')),
+          SnackBar(
+              content: Text('auth_err_login_fail'.tr(args: [e.toString()]))),
         );
       }
     }
@@ -107,20 +110,21 @@ class _AuthScreenState extends State<AuthScreen> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: const Text('Hesap Oluştur'),
+              title: Text('auth_title_create'.tr()),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
                     controller: regEmailController,
                     decoration:
-                        const InputDecoration(labelText: 'E-posta adresi'),
+                        InputDecoration(labelText: 'auth_lbl_email'.tr()),
                     keyboardType: TextInputType.emailAddress,
                   ),
                   const SizedBox(height: 8),
                   TextField(
                     controller: regPasswordController,
-                    decoration: const InputDecoration(labelText: 'Şifre'),
+                    decoration:
+                        InputDecoration(labelText: 'auth_lbl_pass'.tr()),
                     obscureText: true,
                   ),
                 ],
@@ -128,7 +132,7 @@ class _AuthScreenState extends State<AuthScreen> {
               actions: [
                 TextButton(
                   onPressed: isRegLoading ? null : () => Navigator.pop(ctx),
-                  child: const Text('İptal'),
+                  child: Text('auth_btn_cancel'.tr()),
                 ),
                 ElevatedButton(
                   onPressed: isRegLoading
@@ -137,9 +141,8 @@ class _AuthScreenState extends State<AuthScreen> {
                           if (regEmailController.text.isEmpty ||
                               regPasswordController.text.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content:
-                                      Text('Lütfen email ve şifre girin.')),
+                              SnackBar(
+                                  content: Text('auth_err_email_pass'.tr())),
                             );
                             return;
                           }
@@ -172,7 +175,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Kayıt Ol'),
+                      : Text('auth_btn_register'.tr()),
                 ),
               ],
             );
@@ -199,7 +202,8 @@ class _AuthScreenState extends State<AuthScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Giriş başarısız: $e')),
+          SnackBar(
+              content: Text('auth_err_login_fail'.tr(args: [e.toString()]))),
         );
       }
     }
@@ -239,25 +243,15 @@ class _AuthScreenState extends State<AuthScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Icon(
-                  Icons.menu_book_rounded,
-                  size: 64,
-                  color: theme.colorScheme.primary,
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Hoş Geldiniz',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -1,
-                    color: theme.colorScheme.onSurface,
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16.0),
+                    child: LumoriaLogo(iconSize: 64, fontSize: 36),
                   ),
-                  textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
                 Text(
-                  'Bulut senkronizasyonu için hesabınıza giriş yapın veya devam edin.',
+                  'auth_desc_welcome'.tr(),
                   style: TextStyle(
                     fontSize: 15,
                     color: theme.colorScheme.onSurfaceVariant,
@@ -268,7 +262,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 _buildTextField(
                   context: context,
                   controller: _emailController,
-                  hintText: 'E-posta adresi',
+                  hintText: 'auth_lbl_email'.tr(),
                   icon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                 ),
@@ -276,7 +270,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 _buildTextField(
                   context: context,
                   controller: _passwordController,
-                  hintText: 'Şifre',
+                  hintText: 'auth_lbl_pass'.tr(),
                   icon: Icons.lock_outline,
                   obscureText: true,
                 ),
@@ -298,9 +292,9 @@ class _AuthScreenState extends State<AuthScreen> {
                           width: 20,
                           child: CircularProgressIndicator(
                               color: Colors.white, strokeWidth: 2))
-                      : const Text(
-                          'Giriş Yap',
-                          style: TextStyle(
+                      : Text(
+                          'auth_btn_login'.tr(),
+                          style: const TextStyle(
                               fontSize: 16, fontWeight: FontWeight.w600),
                         ),
                 ),
@@ -317,20 +311,22 @@ class _AuthScreenState extends State<AuthScreen> {
                         color:
                             theme.colorScheme.primary.withValues(alpha: 0.5)),
                   ),
-                  child: const Text(
-                    'Yeni Hesap Oluştur',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  child: Text(
+                    'auth_btn_new_account'.tr(),
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Row(
+                Row(
                   children: [
-                    Expanded(child: Divider()),
+                    const Expanded(child: Divider()),
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Text('veya', style: TextStyle(color: Colors.grey)),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text('auth_lbl_or'.tr(),
+                          style: const TextStyle(color: Colors.grey)),
                     ),
-                    Expanded(child: Divider()),
+                    const Expanded(child: Divider()),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -346,9 +342,10 @@ class _AuthScreenState extends State<AuthScreen> {
                             theme.colorScheme.outline.withValues(alpha: 0.3)),
                   ),
                   icon: const Icon(Icons.g_mobiledata_rounded, size: 28),
-                  label: const Text(
-                    'Google ile Devam Et',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  label: Text(
+                    'auth_btn_google'.tr(),
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w500),
                   ),
                 ),
                 const SizedBox(height: 32),
@@ -357,7 +354,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   style: TextButton.styleFrom(
                     foregroundColor: theme.colorScheme.onSurfaceVariant,
                   ),
-                  child: const Text('Ücretsiz Kullanıma Devam Et (Çevrimdışı)'),
+                  child: Text('auth_btn_guest'.tr()),
                 ),
               ],
             ),

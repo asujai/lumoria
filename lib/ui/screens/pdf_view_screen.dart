@@ -11,6 +11,7 @@ import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import '../widgets/floating_tooltip.dart';
 import '../../core/database/database_helper.dart';
 import '../../core/services/settings_service.dart';
+import '../widgets/lumoria_logo.dart';
 
 class PdfViewScreen extends StatefulWidget {
   /// Kütüphaneden açılırken mevcut bir dosya yolu verilebilir.
@@ -29,7 +30,7 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
   double _currentZoom = 1.0;
 
   File? _selectedPdfFile;
-  String _pdfName = 'Bilinmeyen_PDF';
+  String _pdfName = 'pdf_unknown'.tr();
   OverlayEntry? _overlayEntry;
   bool _isSavingToLibrary = false;
   bool _isLibraryPdf = false; // true ise otomatik kayıt aktif
@@ -619,32 +620,9 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
                     ],
                   )
                 : AppBar(
-                    title: Row(
-                      children: [
-                        Icon(Icons.auto_stories,
-                            color: theme.colorScheme.primary, size: 28),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Lumoria: PDF',
-                          style: TextStyle(
-                            fontFamily:
-                                'Roboto', // For a more clinical/modern look or fallback; or just rely on Lexend
-                            fontWeight: FontWeight.w500,
-                            letterSpacing: -0.5,
-                            fontSize: 20,
-                          ),
-                        ),
-                      ],
-                    ),
+                    title: const LumoriaLogo(iconSize: 28, fontSize: 18),
                     centerTitle: false,
                     elevation: 0,
-                    actions: [
-                      IconButton(
-                        icon: const Icon(Icons.notifications_none),
-                        onPressed: () {},
-                        padding: const EdgeInsets.only(right: 16),
-                      ),
-                    ],
                   ),
             body: _selectedPdfFile == null
                 ? _buildEmptyState(theme)
@@ -731,27 +709,29 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
                       return Stack(
                         clipBehavior: Clip.none,
                         children: [
-                          Positioned(
-                            left: _timerPosition.dx,
-                            top: _timerPosition.dy,
-                            child: GestureDetector(
-                              onPanUpdate: (details) {
-                                final screenSize = MediaQuery.of(context).size;
-                                setState(() {
-                                  double dx =
-                                      _timerPosition.dx + details.delta.dx;
-                                  double dy =
-                                      _timerPosition.dy + details.delta.dy;
-                                  // Clamp to prevent moving completely off-screen
-                                  // (arbitrary approximate button sizes for boundary limits)
-                                  dx = dx.clamp(0.0, screenSize.width - 150.0);
-                                  dy = dy.clamp(0.0, screenSize.height - 60.0);
-                                  _timerPosition = Offset(dx, dy);
-                                });
-                              },
-                              child: _buildTimerButton(theme),
+                          if (SettingsService().showTimerIcon)
+                            Positioned(
+                              left: _timerPosition.dx,
+                              top: _timerPosition.dy,
+                              child: GestureDetector(
+                                onPanUpdate: (details) {
+                                  final screenSize =
+                                      MediaQuery.of(context).size;
+                                  setState(() {
+                                    double dx =
+                                        _timerPosition.dx + details.delta.dx;
+                                    double dy =
+                                        _timerPosition.dy + details.delta.dy;
+                                    dx =
+                                        dx.clamp(0.0, screenSize.width - 150.0);
+                                    dy =
+                                        dy.clamp(0.0, screenSize.height - 60.0);
+                                    _timerPosition = Offset(dx, dy);
+                                  });
+                                },
+                                child: _buildTimerButton(theme),
+                              ),
                             ),
-                          ),
                           if (selectedText != null)
                             Positioned(
                               bottom: 100,

@@ -52,13 +52,17 @@ void main() async {
 
   FlutterNativeSplash.remove();
 
+  // UI locale is only tr if TR is selected, else it acts as en
+  final savedLang = SettingsService().language;
+  final startLocale =
+      savedLang == 'tr' ? const Locale('tr') : const Locale('en');
+
   runApp(
     EasyLocalization(
       supportedLocales: const [Locale('en'), Locale('tr')],
       path: 'assets/translations',
-      fallbackLocale: const Locale('tr'),
-      startLocale:
-          Locale(SettingsService().language), // load initial from settings
+      fallbackLocale: const Locale('en'),
+      startLocale: startLocale,
       child: ContextPdfApp(showOnboarding: showOnboarding),
     ),
   );
