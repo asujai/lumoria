@@ -40,17 +40,11 @@ class _AuthScreenState extends State<AuthScreen> {
           if (!kIsWeb &&
               (Platform.isAndroid || Platform.isIOS || Platform.isMacOS)) {
             try {
-              final result = await Purchases.logIn(email);
-              // Set premium based on actual RevenueCat status for this user
-              final isPremiumNow =
-                  result.customerInfo.entitlements.all['premium']?.isActive ??
-                      false;
-              await SettingsService().setPremium(isPremiumNow);
+              await Purchases.logIn(email);
+              // PurchaseService listens to CustomerInfo internally and updates premium status.
             } catch (e) {
-              await SettingsService().setPremium(false);
+              // Ignore failure, premium stays false by default.
             }
-          } else {
-            await SettingsService().setPremium(false);
           }
 
           await SettingsService().setLoggedIn(true, email: email);

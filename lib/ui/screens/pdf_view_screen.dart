@@ -894,7 +894,7 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
                               ),
                               const SizedBox(height: 24),
                               Text(
-                                'Dosyalara Göz Atın',
+                                'pdf_browse_files_title'.tr(),
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
@@ -905,9 +905,9 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
                               ElevatedButton.icon(
                                 onPressed: _pickPdf,
                                 icon: const Icon(Icons.folder_open, size: 20),
-                                label: const Text('Dosyalara Göz At',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold)),
+                                label: Text('pdf_browse'.tr(),
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold)),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: theme.colorScheme.primary,
                                   foregroundColor: Colors.white,
@@ -934,7 +934,7 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Son Belgeler',
+                          'pdf_recent_documents'.tr(),
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -947,7 +947,7 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
                             // Empty for now, wait for navigation
                           },
                           child: Text(
-                            'Tümünü Gör',
+                            'pdf_view_all'.tr(),
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -966,7 +966,7 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
                       Center(
                         child: Padding(
                           padding: const EdgeInsets.all(24.0),
-                          child: Text('Henüz belge yok.',
+                          child: Text('pdf_no_documents'.tr(),
                               style: TextStyle(
                                   color: theme.colorScheme.onSurfaceVariant)),
                         ),

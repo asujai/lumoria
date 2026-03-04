@@ -12,7 +12,6 @@ class SettingsService extends ChangeNotifier {
   static const String _fieldOfStudyKey = 'field_of_study';
   static const String _isLoggedInKey = 'is_logged_in';
   static const String _userEmailKey = 'user_email';
-  static const String _isPremiumKey = 'is_premium';
   static const String _hasSeenAuthKey = 'has_seen_auth';
   static const String _userNameKey = 'user_name';
   static const String _userTitleKey = 'user_title';
@@ -24,7 +23,6 @@ class SettingsService extends ChangeNotifier {
   String _fieldOfStudy = 'Genel';
   bool _isLoggedIn = false;
   String? _userEmail;
-  bool _isPremium = false;
   bool _hasSeenAuth = false;
   String? _userName;
   String? _userTitle;
@@ -38,7 +36,6 @@ class SettingsService extends ChangeNotifier {
   String get fieldOfStudy => _fieldOfStudy;
   bool get isLoggedIn => _isLoggedIn;
   String? get userEmail => _userEmail;
-  bool get isPremium => _isPremium;
   bool get hasSeenAuth => _hasSeenAuth;
   String? get userName => _userName;
   String? get userTitle => _userTitle;
@@ -129,7 +126,6 @@ class SettingsService extends ChangeNotifier {
     }
     _isLoggedIn = prefs.getBool(_isLoggedInKey) ?? false;
     _userEmail = prefs.getString(_userEmailKey);
-    _isPremium = prefs.getBool(_isPremiumKey) ?? false;
     _hasSeenAuth = prefs.getBool(_hasSeenAuthKey) ?? false;
     _userName = prefs.getString(_userNameKey);
     _userTitle = prefs.getString(_userTitleKey);
@@ -176,15 +172,7 @@ class SettingsService extends ChangeNotifier {
       await prefs.setString(_userEmailKey, email);
     } else {
       await prefs.remove(_userEmailKey);
-      await setPremium(false);
     }
-    notifyListeners();
-  }
-
-  Future<void> setPremium(bool value) async {
-    _isPremium = value;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_isPremiumKey, value);
     notifyListeners();
   }
 

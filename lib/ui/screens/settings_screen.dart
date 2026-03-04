@@ -137,7 +137,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         centerTitle: false,
       ),
       body: ListenableBuilder(
-        listenable: _settingsService,
+        listenable: Listenable.merge([_settingsService, PurchaseService()]),
         builder: (context, _) {
           return Center(
             child: ConstrainedBox(
@@ -1188,13 +1188,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildAccountCard(ThemeData theme) {
     final isLoggedIn = _settingsService.isLoggedIn;
-    final isPremium = _settingsService.isPremium;
+    final isPremium = PurchaseService().isPremium;
     final userEmail = _settingsService.userEmail;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionHeader('HESAP VE SENKRONİZASYON'),
+        _sectionHeader('settings_account_sync'.tr()),
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(20),
@@ -1224,8 +1224,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       children: [
                         Text(
                           isLoggedIn
-                              ? (userEmail ?? 'Bilinmeyen Kullanıcı')
-                              : 'Ziyaretçi (Çevrimdışı)',
+                              ? (userEmail ?? 'settings_unknown_user'.tr())
+                              : 'settings_visitor_offline'.tr(),
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -1249,9 +1249,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               child: Text(
                                 isLoggedIn
                                     ? (isPremium
-                                        ? 'Premium Aktif'
-                                        : 'Standart Plan')
-                                    : 'Ücretsiz',
+                                        ? 'settings_premium_active'.tr()
+                                        : 'settings_standard_plan'.tr())
+                                    : 'settings_free'.tr(),
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
@@ -1288,7 +1288,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text('Giriş Yap / Üye Ol'),
+                    child: Text('settings_login_register'.tr()),
                   ),
                 )
               else
@@ -1304,7 +1304,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12)),
                           ),
-                          child: const Text('Hesabı Yükselt'),
+                          child: Text('settings_upgrade_account'.tr()),
                         ),
                       ),
                     if (!isPremium) const SizedBox(width: 12),
@@ -1313,16 +1313,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         onPressed: isPremium
                             ? () {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
+                                  SnackBar(
                                       content: Text(
-                                          'Senkronizasyon simüle ediliyor...')),
+                                          'settings_sync_simulating'.tr())),
                                 );
                               }
                             : () {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
+                                  SnackBar(
                                       content: Text(
-                                          'Premium üyeler için bulut senkronizasyonu.')),
+                                          'settings_sync_premium_only'.tr())),
                                 );
                               },
                         style: ElevatedButton.styleFrom(
@@ -1337,7 +1337,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           elevation: 0,
                         ),
                         icon: const Icon(Icons.cloud_sync, size: 18),
-                        label: const Text('Senkronize Et'),
+                        label: Text('settings_sync'.tr()),
                       ),
                     ),
                   ],
@@ -1361,7 +1361,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     },
                     style: TextButton.styleFrom(
                         foregroundColor: theme.colorScheme.error),
-                    child: const Text('Çıkış Yap'),
+                    child: Text('settings_logout'.tr()),
                   ),
                 ),
               ],

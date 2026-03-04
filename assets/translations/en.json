@@ -125,5 +125,21 @@
     "pdf_unknown": "Unknown_PDF",
     "pdf_manual_note": "Manual Note",
     "library_btn_show_answers": "Show all answers",
-    "library_btn_hide_answers": "Hide all answers"
+    "library_btn_hide_answers": "Hide all answers",
+    "pdf_browse_files_title": "Browse Files",
+    "pdf_recent_documents": "Recent Documents",
+    "pdf_view_all": "View All",
+    "pdf_no_documents": "No documents yet.",
+    "settings_account_sync": "ACCOUNT AND SYNCHRONIZATION",
+    "settings_unknown_user": "Unknown User",
+    "settings_visitor_offline": "Visitor (Offline)",
+    "settings_premium_active": "Premium Active",
+    "settings_standard_plan": "Standard Plan",
+    "settings_free": "Free",
+    "settings_login_register": "Log In / Register",
+    "settings_upgrade_account": "Upgrade Account",
+    "settings_sync_simulating": "Synchronizing...",
+    "settings_sync_premium_only": "Cloud sync is for Premium members.",
+    "settings_sync": "Synchronize",
+    "settings_logout": "Log Out"
 }

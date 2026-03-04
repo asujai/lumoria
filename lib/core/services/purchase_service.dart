@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
-import 'settings_service.dart';
 import '../config/env.dart';
 
 class PurchaseService extends ChangeNotifier {
@@ -32,8 +31,8 @@ class PurchaseService extends ChangeNotifier {
       await fetchOfferings();
     }
 
-    // We fall back to SettingsService in case revenuecat isn't loaded (e.g. on Windows desktop)
-    _isPremium = SettingsService().isPremium;
+    // We set _isPremium to false by default if RevenueCat isn't active (e.g. on Windows)
+    // Can be bound to SecureStorage for local caching if needed later.
   }
 
   void _setupCustomerInfoListener() {
@@ -48,7 +47,6 @@ class PurchaseService extends ChangeNotifier {
         customerInfo.entitlements.all['premium']?.isActive ?? false;
     if (_isPremium != isPremiumNow) {
       _isPremium = isPremiumNow;
-      await SettingsService().setPremium(isPremiumNow);
       notifyListeners();
     }
   }

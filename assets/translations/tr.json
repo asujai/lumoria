@@ -125,5 +125,21 @@
     "pdf_unknown": "Bilinmeyen_PDF",
     "pdf_manual_note": "Manuel Not",
     "library_btn_show_answers": "Tüm cevapları göster",
-    "library_btn_hide_answers": "Tüm cevapları gizle"
+    "library_btn_hide_answers": "Tüm cevapları gizle",
+    "pdf_browse_files_title": "Dosyalara Göz Atın",
+    "pdf_recent_documents": "Son Belgeler",
+    "pdf_view_all": "Tümünü Gör",
+    "pdf_no_documents": "Henüz belge yok.",
+    "settings_account_sync": "HESAP VE SENKRONİZASYON",
+    "settings_unknown_user": "Bilinmeyen Kullanıcı",
+    "settings_visitor_offline": "Ziyaretçi (Çevrimdışı)",
+    "settings_premium_active": "Premium Aktif",
+    "settings_standard_plan": "Standart Plan",
+    "settings_free": "Ücretsiz",
+    "settings_login_register": "Giriş Yap / Üye Ol",
+    "settings_upgrade_account": "Hesabı Yükselt",
+    "settings_sync_simulating": "Senkronizasyon simüle ediliyor...",
+    "settings_sync_premium_only": "Premium üyeler için bulut senkronizasyonu.",
+    "settings_sync": "Senkronize Et",
+    "settings_logout": "Çıkış Yap"
 }
