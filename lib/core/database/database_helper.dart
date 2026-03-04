@@ -23,7 +23,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 6,
+      version: 7,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -73,6 +73,15 @@ CREATE TABLE quiz_history (
   isCorrect INTEGER NOT NULL,
   UNIQUE(date, artifactId) ON CONFLICT REPLACE,
   FOREIGN KEY (artifactId) REFERENCES artifacts (id) ON DELETE CASCADE
+)
+''');
+    await db.execute('''
+CREATE TABLE users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT,
+  auth_provider TEXT NOT NULL,
+  created_at TEXT NOT NULL
 )
 ''');
   }
@@ -136,6 +145,36 @@ CREATE TABLE quiz_history (
       await db.execute(
           'ALTER TABLE pdf_sessions ADD COLUMN totalSeconds INTEGER DEFAULT 0');
     }
+    if (oldVersion < 7) {
+      await db.execute('''
+CREATE TABLE users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT,
+  auth_provider TEXT NOT NULL,
+  created_at TEXT NOT NULL
+)
+''');
+    }
+  }
+
+  // --- USER AUTHENTICATION METOTLARI ---
+  Future<Map<String, dynamic>?> getUserByEmail(String email) async {
+    final db = await instance.database;
+    final result = await db.query('users',
+        where: 'email = ?', whereArgs: [email.toLowerCase().trim()]);
+    return result.isNotEmpty ? result.first : null;
+  }
+
+  Future<void> createUser(
+      String email, String? passwordHash, String authProvider) async {
+    final db = await instance.database;
+    await db.insert('users', {
+      'email': email.toLowerCase().trim(),
+      'password_hash': passwordHash,
+      'auth_provider': authProvider,
+      'created_at': DateTime.now().toIso8601String(),
+    });
   }
 
   Future<int> insertArtifact(Map<String, dynamic> row) async {

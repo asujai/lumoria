@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#257bf4",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#101722",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .sidebar-gradient {
+            background: linear-gradient(180deg, rgba(37, 123, 244, 0.05) 0%, rgba(16, 23, 34, 0) 100%);
+        }
+        .main-gradient {
+            background: radial-gradient(circle at top right, rgba(37, 123, 244, 0.08), transparent 40%),
+                        radial-gradient(circle at bottom left, rgba(37, 123, 244, 0.05), transparent 40%);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased min-h-screen">
+<div class="flex h-screen overflow-hidden">
+<!-- Sidebar -->
+<aside class="w-72 flex-shrink-0 border-r border-slate-200 dark:border-slate-800 flex flex-col sidebar-gradient">
+<div class="p-8">
+<div class="flex items-center gap-3 mb-12">
+<div class="size-10 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-white text-2xl">auto_stories</span>
+</div>
+<div class="flex flex-col">
+<h1 class="text-slate-900 dark:text-white text-lg font-bold leading-none tracking-tight">Lumoria</h1>
+<p class="text-primary text-xs font-semibold tracking-widest uppercase mt-1">Premium</p>
+</div>
+</div>
+<nav class="space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary border border-primary/20 group" href="#">
+<span class="material-symbols-outlined transition-transform group-hover:scale-110">home</span>
+<span class="font-medium">Ana Sayfa</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all group" href="#">
+<span class="material-symbols-outlined transition-transform group-hover:scale-110">library_books</span>
+<span class="font-medium">Kütüphane</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all group" href="#">
+<span class="material-symbols-outlined transition-transform group-hover:scale-110">settings</span>
+<span class="font-medium">Ayarlar</span>
+</a>
+</nav>
+</div>
+<div class="mt-auto p-8 border-t border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-3 p-2 rounded-xl bg-slate-100 dark:bg-slate-900/50">
+<div class="size-10 rounded-full bg-slate-300 dark:bg-slate-700 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="User professional portrait avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4gT_PJA_4xif8QcjAecjv9rBVjpNugc8hTttK2BrHbAe4xXd39xu87cszCuJcxL9eXj_T3TUJQY0G32IgVtCV335b4gnFlsiUOJC7_3eReEYfuS5Tjnif0aRkgzG6xMSowDXZUEZvu5oBWg2Inon1uuHY31pdi5Mmtlsipsj8fcr7mpRZ_On664PhNEzgMKAkg46F9VSg0rEy7YmvZ8wkOQIybFPAf31jAcIiYCGt3_yCgDze55jtog-YCR3Bd3a_eHdijIEf9XVr"/>
+</div>
+<div class="flex flex-col overflow-hidden">
+<p class="text-sm font-semibold truncate">Dr. Aras Demir</p>
+<p class="text-[10px] text-slate-500 uppercase tracking-wider">Araştırmacı</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 overflow-y-auto main-gradient relative">
+<div class="max-w-5xl mx-auto px-10 py-12">
+<!-- Header Section -->
+<!-- Glassmorphic Upload Card -->
+<section class="mb-16">
+<div class="glass-card rounded-xl p-10 flex flex-col items-center text-center border-dashed border-2 border-slate-300 dark:border-slate-700 relative group transition-all hover:border-primary/50">
+<div class="size-20 rounded-full bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-4xl">cloud_upload</span>
+</div>
+<p class="text-slate-500 dark:text-slate-400 mb-4 font-medium">Dosyalara Göz Atın</p><button class="bg-primary hover:bg-primary/90 text-white font-bold py-4 px-10 rounded-xl transition-all shadow-xl shadow-primary/25 active:scale-95 flex items-center gap-2">
+<span class="material-symbols-outlined">folder_open</span>
+                            Dosyalara Göz At
+                        </button>
+</div>
+</section>
+<!-- Recent Files Section -->
+<section>
+<div class="flex items-center justify-between mb-8">
+<h4 class="text-xl font-bold tracking-tight">Son Belgeler</h4>
+<button class="text-primary text-sm font-semibold hover:underline">Tümünü Gör</button>
+</div>
+<div class="grid gap-4">
+<!-- File Entry -->
+<div class="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800 hover:border-primary/30 transition-all group">
+<div class="size-14 rounded-lg bg-red-500/10 dark:bg-red-500/20 flex items-center justify-center text-red-500">
+<span class="material-symbols-outlined text-3xl">picture_as_pdf</span>
+</div>
+<div class="flex-1">
+<h5 class="font-bold text-slate-800 dark:text-slate-100 group-hover:text-primary transition-colors">Kuantum Fiziği Araştırması.pdf</h5>
+<p class="text-sm text-slate-500">2 saat önce düzenlendi • 4.2 MB</p>
+</div>
+<div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+<span class="material-symbols-outlined text-slate-500">visibility</span>
+</button>
+<button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+<span class="material-symbols-outlined text-slate-500">more_vert</span>
+</button>
+</div>
+</div>
+<!-- File Entry -->
+<div class="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800 hover:border-primary/30 transition-all group">
+<div class="size-14 rounded-lg bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center text-blue-500">
+<span class="material-symbols-outlined text-3xl">description</span>
+</div>
+<div class="flex-1">
+<h5 class="font-bold text-slate-800 dark:text-slate-100 group-hover:text-primary transition-colors">Yapay Zeka Etik Kuralları.docx</h5>
+<p class="text-sm text-slate-500">Dün • 1.8 MB</p>
+</div>
+<div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+<span class="material-symbols-outlined text-slate-500">visibility</span>
+</button>
+<button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+<span class="material-symbols-outlined text-slate-500">more_vert</span>
+</button>
+</div>
+</div>
+<!-- File Entry -->
+<div class="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800 hover:border-primary/30 transition-all group">
+<div class="size-14 rounded-lg bg-red-500/10 dark:bg-red-500/20 flex items-center justify-center text-red-500">
+<span class="material-symbols-outlined text-3xl">picture_as_pdf</span>
+</div>
+<div class="flex-1">
+<h5 class="font-bold text-slate-800 dark:text-slate-100 group-hover:text-primary transition-colors">Global Pazar Analizi 2024.pdf</h5>
+<p class="text-sm text-slate-500">3 gün önce • 12.5 MB</p>
+</div>
+<div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+<span class="material-symbols-outlined text-slate-500">visibility</span>
+</button>
+<button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+<span class="material-symbols-outlined text-slate-500">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Decorative background elements -->
+<div class="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-[120px] -z-10"></div>
+<div class="absolute bottom-0 left-0 w-72 h-72 bg-primary/10 rounded-full blur-[100px] -z-10"></div>
+</main>
+</div>
+</body></html>

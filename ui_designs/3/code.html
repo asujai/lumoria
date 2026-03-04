@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lumoria PDF - Farmakokinetik-1</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#257bf4",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#101722",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display transition-colors duration-300">
+<div class="flex h-screen w-full overflow-hidden">
+<!-- Sidebar -->
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col relative bg-slate-50 dark:bg-background-dark">
+<!-- Top Navbar -->
+<header class="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark/80 backdrop-blur-md z-10">
+<div class="flex items-center gap-4">
+<button class="flex items-center justify-center p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined text-slate-600 dark:text-slate-400">arrow_back</span>
+</button>
+<div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-800"></div>
+<h2 class="text-sm font-semibold tracking-tight text-slate-800 dark:text-slate-200">Farmakokinetik-1: <span class="text-slate-400 dark:text-slate-500 font-normal">ABSORPSİYON</span></h2>
+</div>
+<div class="flex items-center gap-3"><button class="p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"><span class="material-symbols-outlined">undo</span></button><button class="p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"><span class="material-symbols-outlined">search</span></button><button class="p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"><span class="material-symbols-outlined">bookmark</span></button><button class="p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"><span class="material-symbols-outlined">folder_open</span></button></div>
+</header>
+<!-- Document Viewer -->
+<div class="flex-1 overflow-y-auto no-scrollbar p-8 flex flex-col items-center gap-8 bg-slate-200/50 dark:bg-slate-900/50">
+<!-- Page Container -->
+<div class="w-full max-w-[850px] aspect-[1/1.414] bg-white dark:bg-slate-950 rounded shadow-2xl shadow-slate-300 dark:shadow-black flex flex-col p-12 relative overflow-hidden ring-1 ring-slate-200 dark:ring-slate-800">
+<div class="absolute top-0 left-0 w-full h-1 bg-primary"></div>
+<div class="space-y-6">
+<div class="flex justify-between items-start">
+<span class="text-xs font-bold text-primary tracking-widest uppercase">Chapter 01</span>
+<span class="text-[10px] text-slate-400 font-mono italic">Lumoria Analytical Engine</span>
+</div>
+<h1 class="text-4xl font-extrabold text-slate-900 dark:text-slate-100 leading-tight">Farmakokinetik-1:<br/><span class="text-primary">ABSORPSİYON</span></h1>
+<div class="w-24 h-1.5 bg-primary/20 rounded-full"></div>
+<div class="py-8 space-y-4">
+<p class="text-lg leading-relaxed text-slate-700 dark:text-slate-300">
+                                İlaçların vücutta kat ettikleri yolun ilk durağı olan absorpsiyon (emilim), ilacın uygulama yerinden sistemik dolaşıma geçişini ifade eder.
+                            </p>
+<p class="text-base leading-relaxed text-slate-600 dark:text-slate-400">
+                                Farmakokinetik süreçlerin temelini oluşturan bu evre, ilacın biyo-yararlanımını belirleyen en kritik aşamalardan biridir. Absorpsiyon hızını ve derecesini etkileyen faktörler arasında ilacın fizikokimyasal özellikleri, uygulama yolu ve fizyolojik değişkenler yer alır.
+                            </p>
+<div class="grid grid-cols-2 gap-6 pt-6">
+<div class="p-5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+<h4 class="text-sm font-bold text-slate-900 dark:text-slate-100 mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">check_circle</span>
+                                        Fizikokimyasal Faktörler
+                                    </h4>
+<ul class="text-xs text-slate-500 dark:text-slate-400 space-y-1">
+<li>• Lipid/Su partisyon katsayısı</li>
+<li>• Molekül ağırlığı ve boyutu</li>
+<li>• İyonizasyon derecesi (pKa)</li>
+</ul>
+</div>
+<div class="p-5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+<h4 class="text-sm font-bold text-slate-900 dark:text-slate-100 mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">check_circle</span>
+                                        Fizyolojik Faktörler
+                                    </h4>
+<ul class="text-xs text-slate-500 dark:text-slate-400 space-y-1">
+<li>• Kan akımı ve yüzey alanı</li>
+<li>• pH seviyesi ve geçiş hızı</li>
+<li>• İlk geçiş etkisi (Presistemik)</li>
+</ul>
+</div>
+</div>
+</div>
+<!-- Placeholder for visual data/chart -->
+<div class="w-full aspect-video rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center p-8 gap-4">
+<div class="w-full flex items-end justify-between h-32 gap-3">
+<div class="w-full bg-primary/20 h-[30%] rounded-t-lg"></div>
+<div class="w-full bg-primary h-[85%] rounded-t-lg"></div>
+<div class="w-full bg-primary/40 h-[55%] rounded-t-lg"></div>
+<div class="w-full bg-primary/60 h-[70%] rounded-t-lg"></div>
+<div class="w-full bg-primary/30 h-[40%] rounded-t-lg"></div>
+<div class="w-full bg-primary/80 h-[95%] rounded-t-lg"></div>
+</div>
+<p class="text-[10px] uppercase font-bold text-slate-400 tracking-widest italic">Absorpsiyon Kinetiği Grafiği</p>
+</div>
+</div>
+<div class="mt-auto pt-12 flex justify-between items-center text-[10px] text-slate-400 font-medium">
+<span>PDR MEDICAL SERIES - 2024</span>
+<span>CONFIDENTIAL - FOR RESEARCH ONLY</span>
+</div>
+</div>
+<!-- Page 2 (Peeking) -->
+<div class="w-full max-w-[850px] aspect-[1/1.414] bg-white dark:bg-slate-950 rounded shadow-lg border border-slate-200 dark:border-slate-800 opacity-50 transform scale-95 origin-top transition-all duration-300 hover:opacity-100 hover:scale-100">
+<div class="p-12 space-y-4">
+<div class="h-4 w-1/4 bg-slate-100 dark:bg-slate-900 rounded"></div>
+<div class="h-8 w-3/4 bg-slate-100 dark:bg-slate-900 rounded"></div>
+<div class="h-4 w-full bg-slate-100 dark:bg-slate-900 rounded"></div>
+<div class="h-4 w-5/6 bg-slate-100 dark:bg-slate-900 rounded"></div>
+</div>
+</div>
+</div>
+<!-- Page Navigation & HUD Overlay -->
+<div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-6">
+<!-- Navigation Pill -->
+<div class="flex items-center bg-white/70 dark:bg-background-dark/80 backdrop-blur-xl px-2 py-1.5 rounded-full border border-white dark:border-slate-800 shadow-2xl">
+<button class="size-10 flex items-center justify-center rounded-full hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors">
+<span class="material-symbols-outlined text-xl">chevron_left</span>
+</button>
+<div class="px-6 flex flex-col items-center">
+<span class="text-sm font-bold text-slate-800 dark:text-slate-100">1 / 69</span>
+<div class="w-12 h-0.5 bg-primary/20 mt-1 overflow-hidden rounded-full">
+<div class="h-full bg-primary w-[2%]"></div>
+</div>
+</div>
+<button class="size-10 flex items-center justify-center rounded-full hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors">
+<span class="material-symbols-outlined text-xl">chevron_right</span>
+</button>
+</div>
+<!-- Status/Timer Pill -->
+<div class="flex items-center gap-3 bg-white/70 dark:bg-background-dark/80 backdrop-blur-xl px-5 py-3 rounded-full border border-white dark:border-slate-800 shadow-2xl">
+<div class="flex items-center gap-2">
+<div class="size-2 rounded-full bg-primary animate-pulse"></div>
+<span class="text-xs font-mono font-bold tracking-tight text-slate-800 dark:text-slate-100">0dk 00sn</span>
+</div>
+<div class="w-[1px] h-4 bg-slate-300 dark:bg-slate-700"></div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">bolt</span>
+<span class="text-[10px] font-bold uppercase tracking-widest text-primary">Live Sync</span>
+</div>
+</div>
+</div>
+<!-- Zoom/Tool Actions Floating -->
+</main>
+</div>
+</body></html>

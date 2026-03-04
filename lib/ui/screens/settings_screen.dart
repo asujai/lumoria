@@ -3,6 +3,8 @@ import 'package:easy_localization/easy_localization.dart';
 import '../../core/services/secure_storage_service.dart';
 import '../../core/services/settings_service.dart';
 import '../../core/database/database_helper.dart';
+import '../../core/services/auth_service.dart';
+import '../../core/services/purchase_service.dart';
 import 'auth_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -656,6 +658,244 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  void _showUpgradeDialog(BuildContext context) async {
+    final theme = Theme.of(context);
+    bool isPurchasing = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Premium\'a Yükselt',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Çoklu cihaz senkronizasyonu ve gelişmiş istatistik özelliklerinin kilidini açın.',
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 32),
+                    if (isPurchasing)
+                      const Center(child: CircularProgressIndicator())
+                    else ...[
+                      // Monthly Subscription Option
+                      _buildPurchaseOption(
+                        title: 'Aylık Abonelik',
+                        price: '\$1.00 / ay',
+                        description: 'İstediğiniz zaman iptal edebilirsiniz.',
+                        icon: Icons.calendar_month,
+                        theme: theme,
+                        onTap: () async {
+                          setModalState(() => isPurchasing = true);
+                          final package =
+                              PurchaseService().offerings?.current?.monthly;
+                          if (package != null) {
+                            final success = await PurchaseService()
+                                .purchasePackage(package);
+                            if (ctx.mounted) {
+                              setModalState(() => isPurchasing = false);
+                              if (success) {
+                                Navigator.pop(ctx);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text(
+                                          'Aylık premium hesabınız aktif edildi!')),
+                                );
+                                setState(() {});
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text(
+                                          'Satın alma işlemi tamamlanamadı veya iptal edildi.')),
+                                );
+                              }
+                            }
+                          } else {
+                            if (ctx.mounted) {
+                              setModalState(() => isPurchasing = false);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text(
+                                        'Aylık paket şu anda kullanılamıyor. (RevenueCat bağlantısını kontrol edin)')),
+                              );
+                            }
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      // Lifetime Option
+                      _buildPurchaseOption(
+                        title: 'Ömür Boyu Erişim',
+                        price: '\$5.00',
+                        description:
+                            'Tek sefere mahsus ödeme, sınırsız kullanım.',
+                        icon: Icons.all_inclusive,
+                        isHighlight: true,
+                        theme: theme,
+                        onTap: () async {
+                          setModalState(() => isPurchasing = true);
+                          final package =
+                              PurchaseService().offerings?.current?.lifetime;
+                          if (package != null) {
+                            final success = await PurchaseService()
+                                .purchasePackage(package);
+                            if (ctx.mounted) {
+                              setModalState(() => isPurchasing = false);
+                              if (success) {
+                                Navigator.pop(ctx);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text(
+                                          'Ömür boyu premium hesabınız aktif edildi!')),
+                                );
+                                setState(() {});
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text(
+                                          'Satın alma işlemi tamamlanamadı veya iptal edildi.')),
+                                );
+                              }
+                            }
+                          } else {
+                            if (ctx.mounted) {
+                              setModalState(() => isPurchasing = false);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text(
+                                        'Ömür boyu paket şu anda kullanılamıyor. (RevenueCat bağlantısını kontrol edin)')),
+                              );
+                            }
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                      TextButton(
+                        onPressed: () async {
+                          setModalState(() => isPurchasing = true);
+                          final restored =
+                              await PurchaseService().restorePurchases();
+                          setModalState(() => isPurchasing = false);
+                          if (ctx.mounted) {
+                            if (restored) {
+                              Navigator.pop(ctx);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text(
+                                        'Satın alımlarınız geri yüklendi!')),
+                              );
+                              setState(() {});
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text(
+                                        'Geri yüklenecek aktif abonelik bulunamadı.')),
+                              );
+                            }
+                          }
+                        },
+                        child: const Text('Satın Alımları Geri Yükle'),
+                      ),
+                    ]
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildPurchaseOption({
+    required String title,
+    required String price,
+    required String description,
+    required IconData icon,
+    required ThemeData theme,
+    required VoidCallback onTap,
+    bool isHighlight = false,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isHighlight
+                ? theme.colorScheme.primary
+                : theme.colorScheme.outlineVariant,
+            width: isHighlight ? 2 : 1,
+          ),
+          color: isHighlight
+              ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
+              : null,
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isHighlight
+                    ? theme.colorScheme.primaryContainer
+                    : theme.colorScheme.secondaryContainer,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon,
+                  color: isHighlight
+                      ? theme.colorScheme.onPrimaryContainer
+                      : theme.colorScheme.onSecondaryContainer),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(description,
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: theme.colorScheme.onSurfaceVariant)),
+                ],
+              ),
+            ),
+            Text(price,
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: theme.colorScheme.primary)),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildAccountCard(ThemeData theme) {
     final isLoggedIn = _settingsService.isLoggedIn;
     final isPremium = _settingsService.isPremium;
@@ -719,7 +959,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               child: Text(
                                 isLoggedIn
                                     ? (isPremium
-                                        ? 'Premium Plan'
+                                        ? 'Premium Aktif'
                                         : 'Standart Plan')
                                     : 'Ücretsiz',
                                 style: TextStyle(
@@ -746,8 +986,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (_) => const AuthScreen()),
+                      Navigator.of(context, rootNavigator: true)
+                          .pushReplacement(
+                        MaterialPageRoute(
+                            builder: (context) => const AuthScreen()),
                       );
                     },
                     style: ElevatedButton.styleFrom(
@@ -765,21 +1007,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     if (!isPremium)
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () {
-                            _settingsService.setPremium(true);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text(
-                                      'Test: Premium hesaba (mock) yükseltildi!')),
-                            );
-                          },
+                          onPressed: () => _showUpgradeDialog(context),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Colors.amber.shade700,
                             side: BorderSide(color: Colors.amber.shade700),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12)),
                           ),
-                          child: const Text('Premium Al'),
+                          child: const Text('Hesabı Yükselt'),
                         ),
                       ),
                     if (!isPremium) const SizedBox(width: 12),
@@ -822,11 +1057,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: TextButton(
-                    onPressed: () {
-                      _settingsService.setLoggedIn(false);
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (_) => const AuthScreen()),
-                      );
+                    onPressed: () async {
+                      await AuthService().logout();
+                      await _settingsService.setLoggedIn(false);
+                      await _settingsService.setHasSeenAuth(false);
+                      if (mounted) {
+                        Navigator.of(context, rootNavigator: true)
+                            .pushReplacement(
+                          MaterialPageRoute(
+                              builder: (context) => const AuthScreen()),
+                        );
+                      }
                     },
                     style: TextButton.styleFrom(
                         foregroundColor: theme.colorScheme.error),

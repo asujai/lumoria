@@ -1,5 +1,5 @@
 {
-    "app_title": "Context PDF",
+    "app_title": "Lumoria: PDF",
     "settings_title": "Settings",
     "home_tab": "Home",
     "library_tab": "Library",
@@ -44,7 +44,7 @@
     "settings_api_btn_del": "Delete Key",
     "settings_api_btn_update": "Update Key",
     "settings_api_btn_connect": "Connect API",
-    "onboarding_title_1": "Welcome to Context PDF",
+    "onboarding_title_1": "Welcome to Lumoria: PDF",
     "onboarding_desc_1": "Your intelligent reading companion. Let's make learning easier and faster.",
     "onboarding_title_2": "Select & Understand",
     "onboarding_desc_2": "Highlight any complex word or paragraph, and AI will explain it to you instantly.",

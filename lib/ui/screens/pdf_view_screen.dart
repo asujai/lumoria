@@ -604,9 +604,16 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
                         Icon(Icons.auto_stories,
                             color: theme.colorScheme.primary, size: 28),
                         const SizedBox(width: 8),
-                        const Text('Context PDF',
-                            style: TextStyle(
-                                fontWeight: FontWeight.w600, fontSize: 20)),
+                        const Text(
+                          'Lumoria: PDF',
+                          style: TextStyle(
+                            fontFamily:
+                                'Roboto', // For a more clinical/modern look or fallback; or just rely on Lexend
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: -0.5,
+                            fontSize: 20,
+                          ),
+                        ),
                       ],
                     ),
                     centerTitle: false,

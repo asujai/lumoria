@@ -1,5 +1,13 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../core/services/settings_service.dart';
+import '../../core/services/auth_service.dart';
 import 'home_shell.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -13,6 +21,47 @@ class _AuthScreenState extends State<AuthScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  late final StreamSubscription<AuthState> _authStateSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _authStateSubscription =
+        Supabase.instance.client.auth.onAuthStateChange.listen((data) async {
+      final AuthChangeEvent event = data.event;
+      if (event == AuthChangeEvent.signedIn) {
+        final session = data.session;
+        if (session != null && mounted) {
+          final email = session.user.email ?? 'Kullanıcı';
+
+          // Identify with RevenueCat if not on web/windows
+          if (!kIsWeb &&
+              (Platform.isAndroid || Platform.isIOS || Platform.isMacOS)) {
+            try {
+              final result = await Purchases.logIn(email);
+              // Set premium based on actual RevenueCat status for this user
+              final isPremiumNow =
+                  result.customerInfo.entitlements.all['premium']?.isActive ??
+                      false;
+              await SettingsService().setPremium(isPremiumNow);
+            } catch (e) {
+              await SettingsService().setPremium(false);
+            }
+          } else {
+            await SettingsService().setPremium(false);
+          }
+
+          await SettingsService().setLoggedIn(true, email: email);
+
+          if (mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const HomeShell()),
+            );
+          }
+        }
+      }
+    });
+  }
 
   void _login() async {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
@@ -23,33 +72,136 @@ class _AuthScreenState extends State<AuthScreen> {
     }
 
     setState(() => _isLoading = true);
-    // Mock network request
-    await Future.delayed(const Duration(seconds: 1));
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
 
-    await SettingsService()
-        .setLoggedIn(true, email: _emailController.text.trim());
+    try {
+      String? error = await AuthService().loginWithEmail(email, password);
 
-    if (mounted) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeShell()),
-      );
+      if (mounted) {
+        setState(() => _isLoading = false);
+        if (error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error)),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Giriş başarısız: $e')),
+        );
+      }
     }
+  }
+
+  void _showRegisterDialog() {
+    final regEmailController = TextEditingController();
+    final regPasswordController = TextEditingController();
+    bool isRegLoading = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Hesap Oluştur'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: regEmailController,
+                    decoration:
+                        const InputDecoration(labelText: 'E-posta adresi'),
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: regPasswordController,
+                    decoration: const InputDecoration(labelText: 'Şifre'),
+                    obscureText: true,
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isRegLoading ? null : () => Navigator.pop(ctx),
+                  child: const Text('İptal'),
+                ),
+                ElevatedButton(
+                  onPressed: isRegLoading
+                      ? null
+                      : () async {
+                          if (regEmailController.text.isEmpty ||
+                              regPasswordController.text.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content:
+                                      Text('Lütfen email ve şifre girin.')),
+                            );
+                            return;
+                          }
+
+                          setDialogState(() => isRegLoading = true);
+                          final email = regEmailController.text.trim();
+                          final password = regPasswordController.text;
+
+                          String? error = await AuthService()
+                              .registerWithEmail(email, password);
+
+                          setDialogState(() => isRegLoading = false);
+
+                          if (error == null) {
+                            if (ctx.mounted) {
+                              Navigator.pop(ctx);
+                              // Auth stream handles the pushReplacement to HomeShell
+                            }
+                          } else {
+                            if (ctx.mounted) {
+                              ScaffoldMessenger.of(ctx).showSnackBar(
+                                SnackBar(content: Text(error)),
+                              );
+                            }
+                          }
+                        },
+                  child: isRegLoading
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Kayıt Ol'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   void _loginWithGoogle() async {
     setState(() => _isLoading = true);
 
-    // Mock network request
-    await Future.delayed(const Duration(seconds: 1));
-
-    await SettingsService().setLoggedIn(true, email: 'google.user@gmail.com');
-    // Also set premium for demo purposes
-    await SettingsService().setPremium(true);
-
-    if (mounted) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeShell()),
-      );
+    try {
+      String? error = await AuthService().loginWithGoogle();
+      if (mounted) {
+        setState(() => _isLoading = false);
+        if (error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error)),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Giriş başarısız: $e')),
+        );
+      }
     }
   }
 
@@ -66,6 +218,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   void dispose() {
+    _authStateSubscription.cancel();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -146,10 +299,39 @@ class _AuthScreenState extends State<AuthScreen> {
                           child: CircularProgressIndicator(
                               color: Colors.white, strokeWidth: 2))
                       : const Text(
-                          'Hesap Oluştur / Giriş Yap',
+                          'Giriş Yap',
                           style: TextStyle(
                               fontSize: 16, fontWeight: FontWeight.w600),
                         ),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton(
+                  onPressed: _isLoading ? null : _showRegisterDialog,
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    foregroundColor: theme.colorScheme.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    side: BorderSide(
+                        color:
+                            theme.colorScheme.primary.withValues(alpha: 0.5)),
+                  ),
+                  child: const Text(
+                    'Yeni Hesap Oluştur',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Row(
+                  children: [
+                    Expanded(child: Divider()),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Text('veya', style: TextStyle(color: Colors.grey)),
+                    ),
+                    Expanded(child: Divider()),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 OutlinedButton.icon(

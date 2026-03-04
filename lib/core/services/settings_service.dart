@@ -117,6 +117,7 @@ class SettingsService extends ChangeNotifier {
       await prefs.setString(_userEmailKey, email);
     } else {
       await prefs.remove(_userEmailKey);
+      await setPremium(false); // Clear premium state on logout
     }
     notifyListeners();
   }

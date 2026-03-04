@@ -7,9 +7,12 @@ import 'dart:io';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'core/services/settings_service.dart';
+import 'core/services/purchase_service.dart';
 import 'ui/theme/app_theme.dart';
 import 'ui/screens/home_shell.dart';
 import 'ui/screens/onboarding_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'core/config/env.dart';
 import 'ui/screens/auth_screen.dart';
 
 void main() async {
@@ -35,8 +38,14 @@ void main() async {
     developer.log('Async Error:', error: error, stackTrace: stack);
     return true;
   };
+  await Supabase.initialize(
+    url: Env.supabaseUrl,
+    anonKey: Env.supabaseAnonKey,
+  );
+
   await EasyLocalization.ensureInitialized();
   await SettingsService().loadSettings();
+  await PurchaseService().init();
 
   final prefs = await SharedPreferences.getInstance();
   final showOnboarding = !(prefs.getBool('onboarding_complete') ?? false);

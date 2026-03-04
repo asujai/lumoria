@@ -1,5 +1,5 @@
 {
-    "app_title": "Context PDF",
+    "app_title": "Lumoria: PDF",
     "home_tab": "Ana Sayfa",
     "library_tab": "Kütüphane",
     "settings_tab": "Ayarlar",
@@ -41,7 +41,7 @@
     "settings_api_btn_connect": "API'ye Bağlan",
     "settings_api_btn_update": "Anahtarı Güncelle",
     "settings_api_success": "API Anahtarı başarıyla kaydedildi.",
-    "onboarding_title_1": "Context PDF'e Hoş Geldiniz",
+    "onboarding_title_1": "Lumoria: PDF'e Hoş Geldiniz",
     "onboarding_desc_1": "Akıllı okuma asistanınız. Öğrenmeyi daha kolay ve hızlı hale getirelim.",
     "onboarding_title_2": "Seçin ve Öğrenin",
     "onboarding_desc_2": "Anlamadığınız kelime veya paragrafı seçin, yapay zeka size anında açıklasın.",

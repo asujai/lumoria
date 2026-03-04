@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#257bf4",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#101722",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass-card {
+            background: rgba(37, 123, 244, 0.05);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .sidebar-item-active {
+            background: rgba(37, 123, 244, 0.15);
+            border-left: 3px solid #257bf4;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
+<div class="flex h-screen overflow-hidden">
+<!-- Sidebar Navigation -->
+<aside class="w-64 flex-shrink-0 border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between bg-slate-50 dark:bg-background-dark/50">
+<div class="flex flex-col gap-6 p-6">
+<div class="flex items-center gap-3">
+<div class="rounded-full size-10 bg-primary flex items-center justify-center text-white">
+<span class="material-symbols-outlined">menu_book</span>
+</div>
+<div class="flex flex-col">
+<h1 class="text-slate-900 dark:text-white text-base font-bold leading-none">Lumoria PDF</h1>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium mt-1">Premium Plan</p>
+</div>
+</div>
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-[22px]">library_books</span>
+<span class="text-sm font-medium">Kitaplık</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-[22px]">explore</span>
+<span class="text-sm font-medium">Keşfet</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg sidebar-item-active text-primary" href="#">
+<span class="material-symbols-outlined text-[22px] fill-1">translate</span>
+<span class="text-sm font-semibold">Sözlük</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-[22px]">edit_note</span>
+<span class="text-sm font-medium">Notlar</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-[22px]">settings</span>
+<span class="text-sm font-medium">Ayarlar</span>
+</a>
+</nav>
+</div>
+<div class="p-6 flex flex-col gap-4">
+<button class="w-full bg-primary hover:bg-primary/90 text-white rounded-xl py-2.5 text-sm font-bold transition-all shadow-lg shadow-primary/20">
+                    Yükselt
+                </button>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-[22px]">help</span>
+<span class="text-sm font-medium">Yardım</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col overflow-hidden">
+<!-- Header -->
+<header class="h-16 flex items-center justify-between px-8 border-b border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-4">
+<h2 class="text-xl font-bold tracking-tight">Kaydedilen Sözlük</h2>
+<div class="h-4 w-px bg-slate-300 dark:bg-slate-700 mx-2"></div>
+<div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg">
+<span class="material-symbols-outlined text-slate-400 text-sm">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-48 placeholder:text-slate-500" placeholder="Kelime ara..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-xl text-sm font-bold transition-all border border-primary/20">
+<span class="material-symbols-outlined text-sm">quiz</span>
+                        Tekrar Modu
+                    </button>
+<button class="flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-white size-10 rounded-xl transition-colors">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</header>
+<!-- Tabs -->
+<div class="px-8 mt-6">
+<div class="flex gap-8 border-b border-slate-200 dark:border-slate-800">
+<button class="pb-3 border-b-2 border-primary text-primary font-bold text-sm">Tümü (124)</button>
+<button class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-medium text-sm">Önemli</button>
+<button class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-medium text-sm">Son Eklenenler</button>
+<button class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-medium text-sm">Öğrenilenler</button>
+</div>
+</div>
+<!-- Scrollable Content -->
+<div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+<!-- Word Card 1 -->
+<div class="glass-card p-5 rounded-xl flex flex-col justify-between group relative min-h-[140px] hover:border-primary/30 transition-all">
+<button class="absolute top-4 right-4 text-slate-400 group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+<div>
+<span class="text-xs font-bold text-primary/60 tracking-wider uppercase">English</span>
+<h3 class="text-lg font-bold mt-1 text-slate-900 dark:text-white">Ephemeral</h3>
+</div>
+<div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+<p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed blur-sm select-none">Lasting for a very short time.</p>
+</div>
+</div>
+<!-- Word Card 2 -->
+<div class="glass-card p-5 rounded-xl flex flex-col justify-between group relative min-h-[140px] hover:border-primary/30 transition-all">
+<button class="absolute top-4 right-4 text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px] fill-1">visibility_off</span>
+</button>
+<div>
+<span class="text-xs font-bold text-primary/60 tracking-wider uppercase">English</span>
+<h3 class="text-lg font-bold mt-1 text-slate-900 dark:text-white">Serendipity</h3>
+</div>
+<div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+<p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">The occurrence of events by chance in a happy or beneficial way.</p>
+</div>
+</div>
+<!-- Word Card 3 -->
+<div class="glass-card p-5 rounded-xl flex flex-col justify-between group relative min-h-[140px] hover:border-primary/30 transition-all">
+<button class="absolute top-4 right-4 text-slate-400 group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+<div>
+<span class="text-xs font-bold text-primary/60 tracking-wider uppercase">English</span>
+<h3 class="text-lg font-bold mt-1 text-slate-900 dark:text-white">Luminous</h3>
+</div>
+<div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+<p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed blur-sm select-none">Full of or shedding light; bright or shining, especially in the dark.</p>
+</div>
+</div>
+<!-- Word Card 4 -->
+<div class="glass-card p-5 rounded-xl flex flex-col justify-between group relative min-h-[140px] hover:border-primary/30 transition-all">
+<button class="absolute top-4 right-4 text-slate-400 group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+<div>
+<span class="text-xs font-bold text-primary/60 tracking-wider uppercase">English</span>
+<h3 class="text-lg font-bold mt-1 text-slate-900 dark:text-white">Petrichor</h3>
+</div>
+<div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+<p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed blur-sm select-none">A pleasant smell that frequently accompanies the first rain after a long period of warm, dry weather.</p>
+</div>
+</div>
+<!-- Word Card 5 -->
+<div class="glass-card p-5 rounded-xl flex flex-col justify-between group relative min-h-[140px] hover:border-primary/30 transition-all">
+<button class="absolute top-4 right-4 text-slate-400 group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+<div>
+<span class="text-xs font-bold text-primary/60 tracking-wider uppercase">English</span>
+<h3 class="text-lg font-bold mt-1 text-slate-900 dark:text-white">Mellifluous</h3>
+</div>
+<div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+<p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed blur-sm select-none">Sweet or musical; pleasant to hear.</p>
+</div>
+</div>
+<!-- Word Card 6 -->
+<div class="glass-card p-5 rounded-xl flex flex-col justify-between group relative min-h-[140px] hover:border-primary/30 transition-all">
+<button class="absolute top-4 right-4 text-slate-400 group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+<div>
+<span class="text-xs font-bold text-primary/60 tracking-wider uppercase">English</span>
+<h3 class="text-lg font-bold mt-1 text-slate-900 dark:text-white">Ethereal</h3>
+</div>
+<div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+<p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed blur-sm select-none">Extremely delicate and light in a way that seems too perfect for this world.</p>
+</div>
+</div>
+<!-- Word Card 7 -->
+<div class="glass-card p-5 rounded-xl flex flex-col justify-between group relative min-h-[140px] hover:border-primary/30 transition-all">
+<button class="absolute top-4 right-4 text-slate-400 group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+<div>
+<span class="text-xs font-bold text-primary/60 tracking-wider uppercase">English</span>
+<h3 class="text-lg font-bold mt-1 text-slate-900 dark:text-white">Quintessential</h3>
+</div>
+<div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+<p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed blur-sm select-none">Representing the most perfect or typical example of a quality or class.</p>
+</div>
+</div>
+<!-- Word Card 8 -->
+<div class="glass-card p-5 rounded-xl flex flex-col justify-between group relative min-h-[140px] hover:border-primary/30 transition-all">
+<button class="absolute top-4 right-4 text-slate-400 group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+<div>
+<span class="text-xs font-bold text-primary/60 tracking-wider uppercase">English</span>
+<h3 class="text-lg font-bold mt-1 text-slate-900 dark:text-white">Vanguard</h3>
+</div>
+<div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+<p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed blur-sm select-none">A group of people leading the way in new developments or ideas.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Stat -->
+<footer class="h-12 border-t border-slate-200 dark:border-slate-800 px-8 flex items-center justify-between text-xs text-slate-500 font-medium">
+<div>Son senkronizasyon: Bugün 14:22</div>
+<div class="flex gap-4">
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-primary"></span> 24 Yeni Kelime</span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span> 100 Öğrenildi</span>
+</div>
+</footer>
+</main>
+</div>
+</body></html>

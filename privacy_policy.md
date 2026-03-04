@@ -1,12 +1,12 @@
-# Privacy Policy for Context PDF
+# Privacy Policy for Lumoria: PDF
 
 **Last Updated:** [Date]
 
-This Privacy Policy describes how your data is collected, used, and explicitly NOT shared when you use the Context PDF application.
+This Privacy Policy describes how your data is collected, used, and explicitly NOT shared when you use the Lumoria: PDF application.
 
 ## 1. Information Collection and Use
 
-**Context PDF is a privacy-first application.**
+**Lumoria: PDF is a privacy-first application.**
 We do not collect, transmit, store on external servers, or share your personal data, PDF documents, or reading habits.
 
 - **Local Storage:** All PDF files you open, the text snippets you analyze, and your application settings (such as Dark Mode or selected Language) are stored **locally on your device**.
