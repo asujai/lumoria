@@ -48,9 +48,14 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
   int _totalUnsavedSeconds = 0; // Background total time
   bool _isTimerRunning = false;
 
+  // Recent PDFs for home screen view
+  List<Map<String, dynamic>> _recentPdfs = [];
+  bool _isLoadingRecent = true;
+
   @override
   void initState() {
     super.initState();
+    _loadRecentPdfs();
     if (widget.initialFilePath != null) {
       final file = File(widget.initialFilePath!);
       if (file.existsSync()) {
@@ -60,6 +65,21 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
         _isLibraryPdf = widget.initialFilePath!.contains('saved_pdfs');
         _startMasterTimer();
       }
+    }
+  }
+
+  Future<void> _loadRecentPdfs() async {
+    final data = await DatabaseHelper.instance.fetchAllArtifacts();
+    if (mounted) {
+      setState(() {
+        _recentPdfs = data.where((item) => item['type'] == 'pdf').toList()
+          ..sort(
+              (a, b) => (b['date'] as String).compareTo(a['date'] as String));
+        if (_recentPdfs.length > 5) {
+          _recentPdfs = _recentPdfs.sublist(0, 5);
+        }
+        _isLoadingRecent = false;
+      });
     }
   }
 
@@ -627,118 +647,7 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
                     ],
                   ),
             body: _selectedPdfFile == null
-                ? SafeArea(
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 800),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 24.0, vertical: 16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 16),
-                              Text(
-                                'pdf_read_hello'.tr(),
-                                style: TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
-                                  color: theme.colorScheme.onSurface,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'pdf_read_ready'.tr(),
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                              const SizedBox(height: 32),
-                              GestureDetector(
-                                onTap: _pickPdf,
-                                child: Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 40, horizontal: 24),
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.surface,
-                                    borderRadius: BorderRadius.circular(24),
-                                    border: Border.all(
-                                      color: theme
-                                          .colorScheme.surfaceContainerHighest,
-                                      width: 2,
-                                      style: BorderStyle.none,
-                                    ),
-                                  ),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Container(
-                                        width: 64,
-                                        height: 64,
-                                        decoration: BoxDecoration(
-                                          color: theme.colorScheme.primary
-                                              .withValues(alpha: 0.1),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Icon(
-                                          Icons.cloud_upload_outlined,
-                                          size: 32,
-                                          color: theme.colorScheme.primary,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 24),
-                                      Text(
-                                        'pdf_read_upload'.tr(),
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w600,
-                                          color: theme.colorScheme.onSurface,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        'pdf_max_size'.tr(),
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: theme
-                                              .colorScheme.onSurfaceVariant,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 24),
-                                      ElevatedButton.icon(
-                                        onPressed: _pickPdf,
-                                        icon: const Icon(Icons.add, size: 20),
-                                        label: Text('pdf_browse'.tr(),
-                                            style: const TextStyle(
-                                                fontWeight: FontWeight.w600)),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              theme.colorScheme.primary,
-                                          foregroundColor:
-                                              theme.colorScheme.surface,
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 24, vertical: 12),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(100),
-                                          ),
-                                          elevation: 4,
-                                          shadowColor: theme.colorScheme.primary
-                                              .withValues(alpha: 0.4),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  )
+                ? _buildEmptyState(theme)
                 : Stack(
                     children: [
                       _buildPdfViewer(),
@@ -876,5 +785,276 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
                 : null,
           );
         });
+  }
+
+  Widget _buildEmptyState(ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+    return Stack(
+      children: [
+        // Radial Gradients
+        Positioned(
+          top: -150,
+          right: -150,
+          child: Container(
+            width: 400,
+            height: 400,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  theme.colorScheme.primary.withValues(alpha: 0.15),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: -150,
+          left: -150,
+          child: Container(
+            width: 300,
+            height: 300,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  theme.colorScheme.primary.withValues(alpha: 0.1),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        // Main Content
+        SafeArea(
+          child: SingleChildScrollView(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 40.0, vertical: 48.0),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 800),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Upload Card
+                    GestureDetector(
+                      onTap: _pickPdf,
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 40, horizontal: 24),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.03)
+                                : const Color(0xFFF0F5FD),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: theme.colorScheme.primary
+                                  .withValues(alpha: 0.3),
+                              width: 2,
+                              style: BorderStyle.solid,
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 80,
+                                height: 80,
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary
+                                      .withValues(alpha: 0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.cloud_upload,
+                                  size: 36,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              Text(
+                                'Dosyalara Göz Atın',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              ElevatedButton.icon(
+                                onPressed: _pickPdf,
+                                icon: const Icon(Icons.folder_open, size: 20),
+                                label: const Text('Dosyalara Göz At',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: theme.colorScheme.primary,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 40, vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  elevation: 8,
+                                  shadowColor: theme.colorScheme.primary
+                                      .withValues(alpha: 0.4),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 48),
+
+                    // Recent Documents Header
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Son Belgeler',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: -0.5,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            // Empty for now, wait for navigation
+                          },
+                          child: Text(
+                            'Tümünü Gör',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Recent files list
+                    if (_isLoadingRecent)
+                      const Center(child: CircularProgressIndicator())
+                    else if (_recentPdfs.isEmpty)
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Text('Henüz belge yok.',
+                              style: TextStyle(
+                                  color: theme.colorScheme.onSurfaceVariant)),
+                        ),
+                      )
+                    else
+                      ..._recentPdfs
+                          .map((pdf) => _buildRecentPdfCard(pdf, theme)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRecentPdfCard(Map<String, dynamic> item, ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+    final fileExists =
+        item['filePath'] != null && File(item['filePath']).existsSync();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Material(
+        color: isDark ? const Color(0xFF131A26) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: fileExists
+              ? () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          PdfViewScreen(initialFilePath: item['filePath']),
+                    ),
+                  );
+                }
+              : null,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color:
+                    isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: Colors.red.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.picture_as_pdf,
+                      color: Colors.red, size: 28),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item['pdfName'] ?? 'Belge',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: fileExists
+                              ? theme.colorScheme.onSurface
+                              : theme.colorScheme.error,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        fileExists
+                            ? (item['date']?.substring(0, 10) ?? '')
+                            : 'Dosya Bulunamadı',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: fileExists
+                              ? theme.colorScheme.onSurfaceVariant
+                              : theme.colorScheme.error,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (fileExists)
+                  Icon(Icons.visibility,
+                      color: theme.colorScheme.onSurfaceVariant
+                          .withValues(alpha: 0.5)),
+                const SizedBox(width: 8),
+                Icon(Icons.more_vert,
+                    color: theme.colorScheme.onSurfaceVariant),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

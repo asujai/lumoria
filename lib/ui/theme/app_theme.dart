@@ -2,29 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  static const Color primaryColor = Color(0xFF195DE6);
+  static const Color primaryColor = Color(0xFF257BF4);
 
   // Light Theme Colors
-  static const Color bgLight = Color(0xFFF6F6F8);
+  static const Color bgLight = Color(0xFFF5F7F8);
   static const Color surfaceLight = Color(0xFFFFFFFF);
   static const Color borderLight = Color(0xFFE2E8F0);
   static const Color textLightPrimary = Color(0xFF0F172A);
   static const Color textLightSecondary = Color(0xFF64748B);
 
   // Dark Theme Colors
-  static const Color bgDark = Color(0xFF111621);
+  static const Color bgDark = Color(0xFF101722);
   static const Color surfaceDark = Color(0xFF1A2232);
   static const Color borderDark = Color(0xFF243047);
   static const Color textDarkPrimary = Color(0xFFF8FAFC);
-  static const Color textDarkSecondary = Color(0xFF93A5C8);
+  static const Color textDarkSecondary = Color(0xFF94A3B8);
 
   static ThemeData getLightTheme(Color primaryColor) {
     return ThemeData(
       brightness: Brightness.light,
       primaryColor: primaryColor,
       scaffoldBackgroundColor: bgLight,
-      fontFamily: GoogleFonts.lexend().fontFamily,
-      textTheme: GoogleFonts.lexendTextTheme(),
+      fontFamily: GoogleFonts.inter().fontFamily,
+      textTheme: GoogleFonts.interTextTheme(),
       colorScheme: ColorScheme.light(
         primary: primaryColor,
         surface: surfaceLight,
@@ -63,8 +63,8 @@ class AppTheme {
       brightness: Brightness.dark,
       primaryColor: primaryColor,
       scaffoldBackgroundColor: bgDark,
-      fontFamily: GoogleFonts.lexend().fontFamily,
-      textTheme: GoogleFonts.lexendTextTheme(ThemeData.dark().textTheme),
+      fontFamily: GoogleFonts.inter().fontFamily,
+      textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
       colorScheme: ColorScheme.dark(
         primary: primaryColor,
         surface: surfaceDark,

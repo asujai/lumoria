@@ -31,47 +31,11 @@ class _HomeShellState extends State<HomeShell> {
     );
 
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: isWideScreen
           ? Row(
               children: [
-                NavigationRail(
-                  selectedIndex: _currentIndex,
-                  onDestinationSelected: (int index) {
-                    setState(() => _currentIndex = index);
-                  },
-                  labelType: NavigationRailLabelType.all,
-                  backgroundColor: theme.colorScheme.surface,
-                  selectedIconTheme:
-                      IconThemeData(color: theme.colorScheme.primary),
-                  selectedLabelTextStyle: TextStyle(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.bold),
-                  unselectedIconTheme:
-                      IconThemeData(color: theme.colorScheme.onSurfaceVariant),
-                  unselectedLabelTextStyle:
-                      TextStyle(color: theme.colorScheme.onSurfaceVariant),
-                  destinations: [
-                    NavigationRailDestination(
-                      icon: const Icon(Icons.auto_stories_outlined),
-                      selectedIcon: const Icon(Icons.auto_stories),
-                      label: Text('home_tab'.tr()),
-                    ),
-                    NavigationRailDestination(
-                      icon: const Icon(Icons.bookmarks_outlined),
-                      selectedIcon: const Icon(Icons.bookmarks),
-                      label: Text('library_tab'.tr()),
-                    ),
-                    NavigationRailDestination(
-                      icon: const Icon(Icons.settings_outlined),
-                      selectedIcon: const Icon(Icons.settings),
-                      label: Text('settings_tab'.tr()),
-                    ),
-                  ],
-                ),
-                VerticalDivider(
-                    thickness: 1,
-                    width: 1,
-                    color: theme.colorScheme.surfaceContainerHighest),
+                _buildCustomSidebar(theme),
                 Expanded(child: content),
               ],
             )
@@ -97,19 +61,19 @@ class _HomeShellState extends State<HomeShell> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildNavItem(
+                  _buildBottomNavItem(
                     index: 0,
                     icon: Icons.auto_stories,
                     label: 'home_tab'.tr(),
                     theme: theme,
                   ),
-                  _buildNavItem(
+                  _buildBottomNavItem(
                     index: 1,
-                    icon: Icons.bookmarks,
+                    icon: Icons.library_books,
                     label: 'library_tab'.tr(),
                     theme: theme,
                   ),
-                  _buildNavItem(
+                  _buildBottomNavItem(
                     index: 2,
                     icon: Icons.settings,
                     label: 'settings_tab'.tr(),
@@ -121,7 +85,221 @@ class _HomeShellState extends State<HomeShell> {
     );
   }
 
-  Widget _buildNavItem({
+  Widget _buildCustomSidebar(ThemeData theme) {
+    bool isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      width: 260,
+      decoration: BoxDecoration(
+        color: isDark
+            ? const Color(0xFF101722).withValues(alpha: 0.5)
+            : const Color(0xFFF8FAFC),
+        border: Border(
+          right: BorderSide(
+            color: theme.colorScheme.surfaceContainerHighest,
+            width: 1,
+          ),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header Log
+          Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.auto_stories,
+                      color: Colors.white, size: 22),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Lumoria',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.5,
+                        color: theme.colorScheme.onSurface,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                    Text(
+                      'PREMIUM',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.5,
+                        color: theme.colorScheme.primary,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Navigation
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              children: [
+                _buildSidebarItem(0, Icons.home_rounded, 'Ana Sayfa', theme),
+                const SizedBox(height: 4),
+                _buildSidebarItem(
+                    1, Icons.library_books_rounded, 'Kütüphane', theme),
+                const SizedBox(height: 4),
+                _buildSidebarItem(2, Icons.settings_rounded, 'Ayarlar', theme),
+              ],
+            ),
+          ),
+
+          // User profile at bottom
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  width: 1,
+                ),
+              ),
+            ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.03)
+                    : Colors.black.withValues(alpha: 0.03),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.person,
+                        color: theme.colorScheme.primary, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Dr. Aras Demir',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          'ARAŞTIRMACI',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSidebarItem(
+      int index, IconData icon, String label, ThemeData theme) {
+    final isSelected = _currentIndex == index;
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => setState(() => _currentIndex = index),
+        borderRadius: BorderRadius.circular(12),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            border: isSelected
+                ? Border(
+                    left: const BorderSide(color: Color(0xFF257BF4), width: 3),
+                    top: BorderSide(
+                        color:
+                            theme.colorScheme.primary.withValues(alpha: 0.2)),
+                    right: BorderSide(
+                        color:
+                            theme.colorScheme.primary.withValues(alpha: 0.2)),
+                    bottom: BorderSide(
+                        color:
+                            theme.colorScheme.primary.withValues(alpha: 0.2)),
+                  )
+                : null,
+          ),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                color: isSelected
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurfaceVariant,
+                size: 22,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  color: isSelected
+                      ? (isDark ? Colors.white : theme.colorScheme.primary)
+                      : theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomNavItem({
     required int index,
     required IconData icon,
     required String label,
