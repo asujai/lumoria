@@ -10,7 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  syncfusion_flutter_pdfviewer: ^32.2.7
+  syncfusion_flutter_pdfviewer: ^32.2.8
   sqflite: ^2.4.2
   path: ^1.9.1
   flutter_secure_storage: ^9.0.0
@@ -32,6 +32,10 @@ dependencies:
   url_launcher: ^6.3.2
   flutter_native_splash: ^2.4.7
   google_sign_in: ^6.2.2
+  text_selection_controls: ^0.0.2
+  flutter_localizations:
+    sdk: flutter
+  syncfusion_localizations: ^32.2.8
 
 dev_dependencies:
   flutter_test:
@@ -60,3 +64,4 @@ flutter:
   assets:
     - assets/translations/
     - assets/images/
+    - assets/images/api_guide/

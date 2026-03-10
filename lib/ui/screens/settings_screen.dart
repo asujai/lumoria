@@ -264,6 +264,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           icon: Icons.language,
                           title: 'settings_doc_lang'.tr(),
                           subtitle: 'settings_doc_lang_sub'.tr(),
+                          infoIcon: IconButton(
+                            icon: const Icon(Icons.info_outline, size: 20),
+                            color: theme.colorScheme.primary,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  title: Text('settings_doc_lang'.tr()),
+                                  content: Text('api_guide_lang_info'.tr()),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx),
+                                      child: Text('api_guide_help_btn_ok'.tr()),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
                           trailing: TextButton(
                             onPressed: () => _showLanguagePicker(context),
                             child: Row(
@@ -543,7 +564,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 Text(
-                  'How to get your API Key',
+                  'api_guide_help_title'.tr(),
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -552,30 +573,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
-
-                // Infographic
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      )
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Image.asset(
-                      'assets/images/api_key_guide.png',
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Steps
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -590,14 +587,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildHelpStep(
-                          '1', 'Sign in to Google Gemini Studio.', theme),
+                      _buildBulletPoint('api_guide_limit_1'.tr(), theme),
                       const SizedBox(height: 12),
-                      _buildHelpStep('2',
-                          'Click "Get API Key" or "Create API Key".', theme),
+                      _buildBulletPoint('api_guide_limit_2'.tr(), theme),
                       const SizedBox(height: 12),
-                      _buildHelpStep(
-                          '3', 'Copy the key and paste it here.', theme),
+                      _buildBulletPoint('api_guide_limit_3'.tr(), theme),
+                      const SizedBox(height: 12),
+                      _buildBulletPoint('api_guide_limit_4'.tr(), theme),
+                      const SizedBox(height: 12),
+                      _buildBulletPoint('api_guide_limit_5'.tr(), theme),
                     ],
                   ),
                 ),
@@ -612,8 +610,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  child: const Text(
-                    'Got it!',
+                  child: Text(
+                    'api_guide_help_btn_ok'.tr(),
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -625,23 +623,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildHelpStep(String number, String text, ThemeData theme) {
+  Widget _buildBulletPoint(String text, ThemeData theme) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 24,
-          height: 24,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primary.withValues(alpha: 0.2),
-            shape: BoxShape.circle,
-          ),
-          child: Text(
-            number,
-            style: TextStyle(
+        Padding(
+          padding: const EdgeInsets.only(top: 6.0),
+          child: Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
               color: theme.colorScheme.primary,
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
+              shape: BoxShape.circle,
             ),
           ),
         ),
@@ -651,7 +644,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             text,
             style: TextStyle(
               fontSize: 14,
-              fontWeight: FontWeight.w500,
+              height: 1.4,
               color: theme.colorScheme.onSurface,
             ),
           ),
@@ -813,6 +806,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String title,
     String? subtitle,
     Widget? trailing,
+    Widget? infoIcon,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -824,13 +818,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    color: theme.colorScheme.onSurface,
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                    if (infoIcon != null) ...[
+                      const SizedBox(width: 4),
+                      infoIcon,
+                    ],
+                  ],
                 ),
                 if (subtitle != null) ...[
                   const SizedBox(height: 2),
@@ -950,7 +955,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _showUpgradeDialog(BuildContext context) async {
     final theme = Theme.of(context);
-    bool isPurchasing = false;
 
     showModalBottomSheet(
       context: context,
@@ -960,160 +964,53 @@ class _SettingsScreenState extends State<SettingsScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) {
-        return StatefulBuilder(
-          builder: (ctx, setModalState) {
-            return SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      'Premium\'a Yükselt',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Çoklu cihaz senkronizasyonu ve gelişmiş istatistik özelliklerinin kilidini açın.',
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 32),
-                    if (isPurchasing)
-                      const Center(child: CircularProgressIndicator())
-                    else ...[
-                      // Monthly Subscription Option
-                      _buildPurchaseOption(
-                        title: 'Aylık Abonelik',
-                        price: '\$1.00 / ay',
-                        description: 'İstediğiniz zaman iptal edebilirsiniz.',
-                        icon: Icons.calendar_month,
-                        theme: theme,
-                        onTap: () async {
-                          setModalState(() => isPurchasing = true);
-                          final package =
-                              PurchaseService().offerings?.current?.monthly;
-                          if (package != null) {
-                            final success = await PurchaseService()
-                                .purchasePackage(package);
-                            if (ctx.mounted) {
-                              setModalState(() => isPurchasing = false);
-                              if (success) {
-                                Navigator.pop(ctx);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text(
-                                          'Aylık premium hesabınız aktif edildi!')),
-                                );
-                                setState(() {});
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text(
-                                          'Satın alma işlemi tamamlanamadı veya iptal edildi.')),
-                                );
-                              }
-                            }
-                          } else {
-                            if (ctx.mounted) {
-                              setModalState(() => isPurchasing = false);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text(
-                                        'Aylık paket şu anda kullanılamıyor. (RevenueCat bağlantısını kontrol edin)')),
-                              );
-                            }
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      // Lifetime Option
-                      _buildPurchaseOption(
-                        title: 'Ömür Boyu Erişim',
-                        price: '\$5.00',
-                        description:
-                            'Tek sefere mahsus ödeme, sınırsız kullanım.',
-                        icon: Icons.all_inclusive,
-                        isHighlight: true,
-                        theme: theme,
-                        onTap: () async {
-                          setModalState(() => isPurchasing = true);
-                          final package =
-                              PurchaseService().offerings?.current?.lifetime;
-                          if (package != null) {
-                            final success = await PurchaseService()
-                                .purchasePackage(package);
-                            if (ctx.mounted) {
-                              setModalState(() => isPurchasing = false);
-                              if (success) {
-                                Navigator.pop(ctx);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text(
-                                          'Ömür boyu premium hesabınız aktif edildi!')),
-                                );
-                                setState(() {});
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text(
-                                          'Satın alma işlemi tamamlanamadı veya iptal edildi.')),
-                                );
-                              }
-                            }
-                          } else {
-                            if (ctx.mounted) {
-                              setModalState(() => isPurchasing = false);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text(
-                                        'Ömür boyu paket şu anda kullanılamıyor. (RevenueCat bağlantısını kontrol edin)')),
-                              );
-                            }
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 24),
-                      TextButton(
-                        onPressed: () async {
-                          setModalState(() => isPurchasing = true);
-                          final restored =
-                              await PurchaseService().restorePurchases();
-                          setModalState(() => isPurchasing = false);
-                          if (ctx.mounted) {
-                            if (restored) {
-                              Navigator.pop(ctx);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text(
-                                        'Satın alımlarınız geri yüklendi!')),
-                              );
-                              setState(() {});
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text(
-                                        'Geri yüklenecek aktif abonelik bulunamadı.')),
-                              );
-                            }
-                          }
-                        },
-                        child: const Text('Satın Alımları Geri Yükle'),
-                      ),
-                    ]
-                  ],
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Premium\'a Yükselt',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-              ),
-            );
-          },
+                const SizedBox(height: 16),
+                Text(
+                  'Çoklu cihaz senkronizasyonu ve gelişmiş istatistik özelliklerinin kilidini açın.',
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 32),
+                // One-Time Payment Option (Visual Only)
+                _buildPurchaseOption(
+                  title: '\$1 — One-time payment',
+                  price: '\$1.00',
+                  description: 'One-time \$1 payment.',
+                  icon: Icons.all_inclusive,
+                  isHighlight: true,
+                  theme: theme,
+                  onTap: () {
+                    // Visual purposes only, no real payment processing
+                    if (ctx.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text(
+                                'Ödeme sistemi şu anda devre dışı. Bu ekran sadece görsel amaçlıdır.')),
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
         );
       },
     );

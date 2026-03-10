@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../config/env.dart';
+import 'sync_service.dart';
 
 class AuthService {
   static final AuthService _instance = AuthService._internal();
@@ -13,6 +14,7 @@ class AuthService {
   Future<String?> loginWithEmail(String email, String password) async {
     try {
       await _supabase.auth.signInWithPassword(email: email, password: password);
+      SyncService().performSync();
       return null; // Başarılı
     } on AuthException catch (e) {
       if (e.message.contains('Invalid login credentials')) {
@@ -34,6 +36,7 @@ class AuthService {
       if (response.session == null) {
         return 'auth_succ_reg'.tr();
       }
+      SyncService().performSync();
       return null; // Başarılı, giriş yapıldı
     } on AuthException catch (e) {
       if (e.message.contains('User already registered')) {
@@ -74,6 +77,8 @@ class AuthService {
         idToken: idToken,
         accessToken: accessToken,
       );
+
+      SyncService().performSync();
 
       return null;
     } catch (e) {

@@ -773,26 +773,72 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
                             Positioned(
                               bottom: 100,
                               right: 16,
-                              child: FloatingActionButton.extended(
-                                onPressed: () {
-                                  final text = _selectedTextNotifier.value;
-                                  final rect = _selectedTextRectNotifier.value;
-                                  if (text != null && rect != null) {
-                                    _pdfViewerController.clearSelection();
-                                    _selectedTextNotifier.value = null;
-                                    _selectedTextRectNotifier.value = null;
-                                    _showTooltip(text, rect);
-                                  }
-                                },
-                                icon: const Icon(CupertinoIcons.wand_stars),
-                                label: Text('pdf_analyze_btn'.tr(),
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.w600)),
-                                backgroundColor:
-                                    Theme.of(context).colorScheme.primary,
-                                foregroundColor:
-                                    Theme.of(context).colorScheme.surface,
-                                heroTag: 'analyze_btn',
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  FloatingActionButton.extended(
+                                    onPressed: () async {
+                                      final text = _selectedTextNotifier.value;
+                                      if (text != null) {
+                                        await DatabaseHelper.instance
+                                            .insertQuote({
+                                          'quotedText': text,
+                                          'pdfName': _pdfName,
+                                          'pageNumber':
+                                              _currentPageNotifier.value,
+                                          'date':
+                                              DateTime.now().toIso8601String(),
+                                        });
+                                        _pdfViewerController.clearSelection();
+                                        _selectedTextNotifier.value = null;
+                                        _selectedTextRectNotifier.value = null;
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content:
+                                                  Text('pdf_quote_saved'.tr()),
+                                              backgroundColor:
+                                                  theme.colorScheme.primary,
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    },
+                                    icon: const Icon(Icons.format_quote),
+                                    label: Text('pdf_quote_btn'.tr(),
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.w600)),
+                                    backgroundColor: theme.colorScheme.tertiary,
+                                    foregroundColor:
+                                        theme.colorScheme.onTertiary,
+                                    heroTag: 'quote_btn',
+                                  ),
+                                  const SizedBox(width: 8),
+                                  FloatingActionButton.extended(
+                                    onPressed: () {
+                                      final text = _selectedTextNotifier.value;
+                                      final rect =
+                                          _selectedTextRectNotifier.value;
+                                      if (text != null && rect != null) {
+                                        _pdfViewerController.clearSelection();
+                                        _selectedTextNotifier.value = null;
+                                        _selectedTextRectNotifier.value = null;
+                                        _showTooltip(text, rect);
+                                      }
+                                    },
+                                    icon: const Icon(CupertinoIcons.wand_stars),
+                                    label: Text('pdf_analyze_btn'.tr(),
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.w600)),
+                                    backgroundColor: theme.colorScheme.primary,
+                                    foregroundColor: theme.colorScheme.surface,
+                                    heroTag: 'analyze_btn',
+                                  ),
+                                ],
                               ),
                             ),
                         ],

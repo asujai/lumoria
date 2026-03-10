@@ -10,11 +10,14 @@ import 'core/services/settings_service.dart';
 import 'core/services/purchase_service.dart';
 import 'ui/theme/app_theme.dart';
 import 'ui/screens/home_shell.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:syncfusion_localizations/syncfusion_localizations.dart';
 import 'ui/screens/onboarding_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/services/secure_storage_service.dart';
 import 'core/config/env.dart';
 import 'ui/screens/auth_screen.dart';
+import 'core/services/sync_service.dart';
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -48,6 +51,7 @@ void main() async {
   await SettingsService().loadSettings();
   await SecureStorageService().init();
   await PurchaseService().init();
+  SyncService().init();
 
   final prefs = await SharedPreferences.getInstance();
   final showOnboarding = !(prefs.getBool('onboarding_complete') ?? false);
@@ -56,8 +60,7 @@ void main() async {
 
   // UI locale is only tr if TR is selected, else it acts as en
   final savedLang = SettingsService().language;
-  final startLocale =
-      savedLang == 'tr' ? const Locale('tr') : const Locale('en');
+  final startLocale = Locale(savedLang);
 
   runApp(
     EasyLocalization(
@@ -83,7 +86,13 @@ class ContextPdfApp extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'app_title'.tr(),
-          localizationsDelegates: context.localizationDelegates,
+          localizationsDelegates: [
+            ...context.localizationDelegates,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+            SfGlobalLocalizations.delegate,
+          ],
           supportedLocales: context.supportedLocales,
           locale: context.locale,
           theme: AppTheme.getLightTheme(themeColor),

@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -18,7 +19,7 @@ class SettingsService extends ChangeNotifier {
   static const String _showTimerIconKey = 'show_timer_icon';
 
   bool _isDarkMode = false;
-  String _language = 'tr';
+  String? _language;
   Color _themeColor = const Color(0xFF195DE6);
   String _fieldOfStudy = 'Genel';
   bool _isLoggedIn = false;
@@ -31,7 +32,8 @@ class SettingsService extends ChangeNotifier {
   static final ValueNotifier<int> activeSessionTime = ValueNotifier(0);
 
   bool get isDarkMode => _isDarkMode;
-  String get language => _language;
+  String get language => _language ?? 'en';
+
   Color get themeColor => _themeColor;
   String get fieldOfStudy => _fieldOfStudy;
   bool get isLoggedIn => _isLoggedIn;
@@ -118,7 +120,13 @@ class SettingsService extends ChangeNotifier {
   Future<void> loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     _isDarkMode = prefs.getBool(_darkModeKey) ?? false;
-    _language = prefs.getString(_languageKey) ?? 'tr';
+    if (!prefs.containsKey(_languageKey)) {
+      final sysLang = PlatformDispatcher.instance.locale.languageCode;
+      _language = (sysLang == 'tr') ? 'tr' : 'en';
+      await prefs.setString(_languageKey, _language!);
+    } else {
+      _language = prefs.getString(_languageKey);
+    }
     _fieldOfStudy = prefs.getString(_fieldOfStudyKey) ?? 'Genel';
     final colorValue = prefs.getInt(_themeColorKey);
     if (colorValue != null) {

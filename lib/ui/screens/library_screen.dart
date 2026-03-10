@@ -19,7 +19,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
   List<Map<String, dynamic>> _filteredArtifacts = [];
   bool _isLoading = true;
   String _searchQuery = '';
-  String _currentFilter = 'notes'; // 'notes', 'pdfs'
+  String _currentFilter = 'notes'; // 'notes', 'pdfs', 'quotes'
   bool _hideAllAnswers = false;
 
   @override
@@ -37,9 +37,25 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   Future<void> _loadArtifacts() async {
     final data = await _dbHelper.fetchAllArtifacts();
+    final quotesData = await _dbHelper.fetchAllQuotes();
+
+    // Convert quotes to a format similar to artifacts for unified filtering
+    final formattedQuotes = quotesData.map((q) {
+      return {
+        'id': q['id'],
+        'originalText': q['quotedText'],
+        'aiExplanation': 'Sayfa: ${q['pageNumber']}',
+        'date': q['date'],
+        'pdfName': q['pdfName'],
+        'type': 'quote',
+      };
+    }).toList();
+
     if (mounted) {
       setState(() {
-        _allArtifacts = data;
+        _allArtifacts = [...data, ...formattedQuotes];
+        _allArtifacts.sort(
+            (a, b) => (b['date'] as String).compareTo(a['date'] as String));
         _isLoading = false;
         _applyFilters();
       });
@@ -59,9 +75,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
     }
 
     if (_currentFilter == 'notes') {
-      current = current.where((item) => item['type'] != 'pdf').toList();
+      current = current
+          .where((item) => item['type'] != 'pdf' && item['type'] != 'quote')
+          .toList();
     } else if (_currentFilter == 'pdfs') {
       current = current.where((item) => item['type'] == 'pdf').toList();
+    } else if (_currentFilter == 'quotes') {
+      current = current.where((item) => item['type'] == 'quote').toList();
     }
 
     setState(() {
@@ -69,8 +89,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
     });
   }
 
-  Future<void> _deleteArtifact(int id) async {
-    await _dbHelper.deleteArtifact(id);
+  Future<void> _deleteArtifact(int id, {bool isQuote = false}) async {
+    if (isQuote) {
+      await _dbHelper.deleteQuote(id);
+    } else {
+      await _dbHelper.deleteArtifact(id);
+    }
     _loadArtifacts();
   }
 
@@ -359,6 +383,19 @@ class _LibraryScreenState extends State<LibraryScreen> {
                                 'library_filter_pdfs'.tr(),
                                 _currentFilter == 'pdfs'),
                           ),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _currentFilter = 'quotes';
+                                _applyFilters();
+                              });
+                            },
+                            child: _buildFilterChip(
+                                theme,
+                                'library_filter_quotes'.tr(),
+                                _currentFilter == 'quotes'),
+                          ),
                         ],
                       ),
                     ),
@@ -395,11 +432,18 @@ class _LibraryScreenState extends State<LibraryScreen> {
                               itemBuilder: (context, index) {
                                 final item = _filteredArtifacts[index];
                                 final isPdf = item['type'] == 'pdf';
-                                final filePath = item['filePath'] as String?;
+                                final isQuote = item['type'] == 'quote';
 
-                                if (isPdf && filePath != null) {
-                                  return _buildPdfLibraryCard(
-                                      theme, item, filePath);
+                                if (isPdf) {
+                                  final filePath = item['filePath'] as String?;
+                                  if (filePath != null) {
+                                    return _buildPdfLibraryCard(
+                                        theme, item, filePath);
+                                  }
+                                }
+
+                                if (isQuote) {
+                                  return _buildQuoteCard(theme, item);
                                 }
 
                                 return LibraryItemCard(
@@ -509,6 +553,112 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuoteCard(ThemeData theme, Map<String, dynamic> item) {
+    final originalText = item['originalText'] as String;
+    final pdfName = item['pdfName'] as String;
+    final aiExplanation = item['aiExplanation'] as String; // e.g. "Sayfa: 1"
+    final date = item['date'] as String;
+    final formattedDate = date.length >= 10 ? date.substring(0, 10) : date;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: theme.colorScheme.tertiary.withValues(alpha: 0.3),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.format_quote,
+                      color: theme.colorScheme.tertiary, size: 24),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      originalText,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: theme.colorScheme.onSurface,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline),
+                    iconSize: 18,
+                    color: theme.colorScheme.onSurfaceVariant,
+                    onPressed: () =>
+                        _deleteArtifact(item['id'] as int, isQuote: true),
+                    alignment: Alignment.topRight,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Divider(
+                  color: theme.colorScheme.surfaceContainerHighest, height: 1),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Icon(Icons.picture_as_pdf_outlined,
+                            size: 14,
+                            color: theme.colorScheme.onSurfaceVariant),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            pdfName,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    aiExplanation,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.tertiary,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    formattedDate,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),

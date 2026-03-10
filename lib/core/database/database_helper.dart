@@ -23,7 +23,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 7,
+      version: 8,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -73,6 +73,15 @@ CREATE TABLE quiz_history (
   isCorrect INTEGER NOT NULL,
   UNIQUE(date, artifactId) ON CONFLICT REPLACE,
   FOREIGN KEY (artifactId) REFERENCES artifacts (id) ON DELETE CASCADE
+)
+''');
+    await db.execute('''
+CREATE TABLE quotes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  quotedText TEXT NOT NULL,
+  pdfName TEXT NOT NULL,
+  pageNumber INTEGER NOT NULL,
+  date TEXT NOT NULL
 )
 ''');
   }
@@ -135,6 +144,17 @@ CREATE TABLE quiz_history (
     if (oldVersion < 6) {
       await db.execute(
           'ALTER TABLE pdf_sessions ADD COLUMN totalSeconds INTEGER DEFAULT 0');
+    }
+    if (oldVersion < 8) {
+      await db.execute('''
+CREATE TABLE quotes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  quotedText TEXT NOT NULL,
+  pdfName TEXT NOT NULL,
+  pageNumber INTEGER NOT NULL,
+  date TEXT NOT NULL
+)
+''');
     }
   }
 
@@ -202,6 +222,25 @@ CREATE TABLE quiz_history (
         .delete('artifact_history', where: 'artifactId = ?', whereArgs: [id]);
     final result =
         await db.delete('artifacts', where: 'id = ?', whereArgs: [id]);
+    artifactUpdateNotifier.value++;
+    return result;
+  }
+
+  Future<int> insertQuote(Map<String, dynamic> row) async {
+    final db = await instance.database;
+    final int id = await db.insert('quotes', row);
+    artifactUpdateNotifier.value++;
+    return id;
+  }
+
+  Future<List<Map<String, dynamic>>> fetchAllQuotes() async {
+    final db = await instance.database;
+    return await db.query('quotes', orderBy: 'date DESC');
+  }
+
+  Future<int> deleteQuote(int id) async {
+    final db = await instance.database;
+    final result = await db.delete('quotes', where: 'id = ?', whereArgs: [id]);
     artifactUpdateNotifier.value++;
     return result;
   }
