@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:easy_localization/easy_localization.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'secure_storage_service.dart';
 import 'settings_service.dart';
+import 'purchase_service.dart';
 
 class GeminiService {
   final SecureStorageService _storageService = SecureStorageService();
@@ -21,19 +23,12 @@ class GeminiService {
   }
 
   Future<String> explainContextualText(String selectedText) async {
+    return "API maliyetlerini önlemek için bu özellik geçici olarak devre dışı bırakılmıştır.";
     try {
-      final apiKey = await _getApiKey();
-
-      if (apiKey.isEmpty) {
-        throw Exception('gemini_err_no_key'.tr());
-      }
-
       final langInstruction = _settingsService.languagePromptInstruction;
       final fieldOfStudy = _settingsService.fieldOfStudy;
 
-      final url = Uri.parse('$_baseUrl/$_model:generateContent?key=$apiKey');
-
-      final body = jsonEncode({
+      final contentParams = {
         'contents': [
           {
             'parts': [
@@ -51,23 +46,50 @@ class GeminiService {
           'temperature': 0.3,
           'maxOutputTokens': 1024,
         }
-      });
+      };
 
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: body,
-      );
+      // Eğer kullanıcı Premium ise (RevenueCat), doğrudan Supabase Edge Function çağırılır 
+      // API Key mobilde saklanmaz, Backend'den (Supabase) işlenir.
+      if (PurchaseService().isPremium) {
+        final response = await Supabase.instance.client.functions.invoke(
+          'gemini-proxy',
+          body: contentParams,
+        );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final text = data['candidates']?[0]?['content']?['parts']?[0]?['text'];
-        return text ?? 'gemini_err_no_desc'.tr();
+        if (response.status == 200) {
+          final data = response.data;
+          final text = data['candidates']?[0]?['content']?['parts']?[0]?['text'];
+          return text ?? 'gemini_err_no_desc'.tr();
+        } else {
+          final errorData = response.data;
+          final errorMsg = errorData['error'] ?? 'gemini_err_unknown'.tr();
+          throw Exception('gemini_err_api'.tr(args: [errorMsg.toString()]));
+        }
       } else {
-        final errorData = jsonDecode(response.body);
-        final errorMsg =
-            errorData['error']?['message'] ?? 'gemini_err_unknown'.tr();
-        throw Exception('gemini_err_api'.tr(args: [errorMsg.toString()]));
+        // Ücretsiz kullanıcı: Kendi ayarladığı API anahtarı kullanılarak HTTP atılır
+        final apiKey = await _getApiKey();
+        if (apiKey.isEmpty) {
+          throw Exception('gemini_err_no_key'.tr());
+        }
+
+        final url = Uri.parse('$_baseUrl/$_model:generateContent?key=$apiKey');
+
+        final response = await http.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(contentParams),
+        );
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          final text = data['candidates']?[0]?['content']?['parts']?[0]?['text'];
+          return text ?? 'gemini_err_no_desc'.tr();
+        } else {
+          final errorData = jsonDecode(response.body);
+          final errorMsg =
+              errorData['error']?['message'] ?? 'gemini_err_unknown'.tr();
+          throw Exception('gemini_err_api'.tr(args: [errorMsg.toString()]));
+        }
       }
     } catch (e) {
       if (e is Exception) rethrow;

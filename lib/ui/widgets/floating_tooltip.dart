@@ -30,10 +30,23 @@ class _FloatingTooltipState extends State<FloatingTooltip> {
   String? _error;
   bool _isSaved = false;
 
+  List<Map<String, dynamic>> _folders = [];
+  int? _selectedFolderId;
+
   @override
   void initState() {
     super.initState();
     _analyzeText();
+    _loadFolders();
+  }
+
+  Future<void> _loadFolders() async {
+    final folders = await _dbHelper.fetchAllFolders();
+    if (mounted) {
+      setState(() {
+        _folders = folders.where((f) => (f['category'] ?? 'notes') == 'notes').toList();
+      });
+    }
   }
 
   Future<void> _analyzeText() async {
@@ -65,6 +78,7 @@ class _FloatingTooltipState extends State<FloatingTooltip> {
         'date': DateTime.now().toIso8601String(),
         'pdfName': widget.pdfName,
         'pageNumber': widget.pageNumber,
+        'folderId': _selectedFolderId,
       });
       if (mounted) {
         setState(() => _isSaved = true);
@@ -91,7 +105,7 @@ class _FloatingTooltipState extends State<FloatingTooltip> {
     return Material(
       color: Colors.transparent,
       child: Container(
-        width: 320,
+        width: MediaQuery.of(context).size.width > 352 ? 320 : MediaQuery.of(context).size.width - 32,
         constraints: const BoxConstraints(maxHeight: 300),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
@@ -180,13 +194,48 @@ class _FloatingTooltipState extends State<FloatingTooltip> {
                       fontWeight: FontWeight.w500),
                 )
               else if (_explanation != null)
-                Text(
-                  _explanation!,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                    height: 1.5,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _explanation!,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                        height: 1.5,
+                      ),
+                    ),
+                    if (_folders.isNotEmpty && !_isSaved)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: DropdownButtonFormField<int>(
+                          value: _selectedFolderId,
+                          dropdownColor: const Color(0xFF1B1A22),
+                          style: const TextStyle(fontSize: 12, color: Colors.white70),
+                          decoration: InputDecoration(
+                            isDense: true,
+                            labelText: 'Klasör',
+                            labelStyle: const TextStyle(color: Colors.white54, fontSize: 12),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(color: theme.colorScheme.primary.withOpacity(0.3)),
+                            ),
+                          ),
+                          items: [
+                            const DropdownMenuItem<int>(
+                              value: null,
+                              child: Text('Klasör Yok'),
+                            ),
+                            ..._folders.map((f) => DropdownMenuItem<int>(
+                                  value: f['id'] as int,
+                                  child: Text(f['name'] as String),
+                                ))
+                          ],
+                          onChanged: (val) => setState(() => _selectedFolderId = val),
+                        ),
+                      ),
+                  ]
                 ),
             ],
           ),

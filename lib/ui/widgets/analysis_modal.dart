@@ -28,10 +28,23 @@ class _AnalysisModalState extends State<AnalysisModal> {
   String? _error;
   bool _isSaved = false;
 
+  List<Map<String, dynamic>> _folders = [];
+  int? _selectedFolderId;
+
   @override
   void initState() {
     super.initState();
     _analyzeText();
+    _loadFolders();
+  }
+
+  Future<void> _loadFolders() async {
+    final folders = await _dbHelper.fetchAllFolders();
+    if (mounted) {
+      setState(() {
+        _folders = folders.where((f) => (f['category'] ?? 'notes') == 'notes').toList();
+      });
+    }
   }
 
   Future<void> _analyzeText() async {
@@ -64,6 +77,7 @@ class _AnalysisModalState extends State<AnalysisModal> {
         'date': DateTime.now().toIso8601String(),
         'pdfName': widget.pdfName,
         'pageNumber': widget.pageNumber,
+        'folderId': _selectedFolderId,
       });
 
       if (mounted) {
@@ -172,6 +186,32 @@ class _AnalysisModalState extends State<AnalysisModal> {
               style: theme.textTheme.bodyLarge,
             ),
             const SizedBox(height: 32),
+            if (_folders.isNotEmpty && !_isSaved)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: DropdownButtonFormField<int>(
+                  value: _selectedFolderId,
+                  decoration: InputDecoration(
+                    labelText: 'Klasör Klasifikasyonu (Opsiyonel)',
+                    filled: true,
+                    fillColor: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none),
+                  ),
+                  items: [
+                    const DropdownMenuItem<int>(
+                      value: null,
+                      child: Text('Kategorize Edilmemiş'),
+                    ),
+                    ..._folders.map((f) => DropdownMenuItem<int>(
+                          value: f['id'] as int,
+                          child: Text(f['name'] as String),
+                        ))
+                  ],
+                  onChanged: (val) => setState(() => _selectedFolderId = val),
+                ),
+              ),
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(

@@ -23,33 +23,11 @@ class SyncService {
   }
 
   void _performBackgroundSync() async {
-    if (!FeatureAccessService().isSyncFeatureEnabled()) return;
-
-    try {
-      _isSyncing = true;
-      await syncLocalToServer();
-    } catch (e) {
-      debugPrint('Arka plan senk hatası: $e');
-    } finally {
-      _isSyncing = false;
-    }
+    return; // Maliyetleri önlemek için geçici olarak kapatıldı
   }
 
   void performSync() async {
-    if (!FeatureAccessService().isSyncFeatureEnabled()) return;
-
-    try {
-      _isSyncing = true;
-      // Önce sunucudakileri lokale al
-      await syncServerToLocal();
-      // Sonra lokaldekileri sunucuya gönder
-      await syncLocalToServer();
-    } catch (e) {
-      // Arka planda sessizce hata yakala
-      debugPrint('Senkronizasyon hatası: $e');
-    } finally {
-      _isSyncing = false;
-    }
+    return; // Maliyetleri önlemek için geçici olarak kapatıldı
   }
 
   Future<void> syncLocalToServer() async {

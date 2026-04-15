@@ -23,7 +23,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 8,
+      version: 11,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -43,8 +43,17 @@ CREATE TABLE artifacts (
   date $textType,
   pdfName $textType,
   type TEXT DEFAULT 'text',
-  filePath TEXT
+  filePath TEXT,
+  folderId INTEGER
   )
+''');
+    await db.execute('''
+CREATE TABLE folders (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  createdAt TEXT NOT NULL,
+  category TEXT DEFAULT 'notes'
+)
 ''');
     await db.execute('''
 CREATE TABLE pdf_sessions (
@@ -81,7 +90,16 @@ CREATE TABLE quotes (
   quotedText TEXT NOT NULL,
   pdfName TEXT NOT NULL,
   pageNumber INTEGER NOT NULL,
-  date TEXT NOT NULL
+  date TEXT NOT NULL,
+  folderId INTEGER
+)
+''');
+    await db.execute('''
+CREATE TABLE drawing_strokes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  pdfPath TEXT NOT NULL,
+  strokesJson TEXT NOT NULL,
+  updatedAt TEXT NOT NULL
 )
 ''');
   }
@@ -156,6 +174,30 @@ CREATE TABLE quotes (
 )
 ''');
     }
+    if (oldVersion < 9) {
+      await db.execute('''
+CREATE TABLE IF NOT EXISTS drawing_strokes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  pdfPath TEXT NOT NULL,
+  strokesJson TEXT NOT NULL,
+  updatedAt TEXT NOT NULL
+)
+''');
+    }
+    if (oldVersion < 10) {
+      await db.execute('''
+CREATE TABLE IF NOT EXISTS folders (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  createdAt TEXT NOT NULL
+)
+''');
+      await db.execute('ALTER TABLE artifacts ADD COLUMN folderId INTEGER');
+    }
+    if (oldVersion < 11) {
+      await db.execute('ALTER TABLE folders ADD COLUMN category TEXT DEFAULT "notes"');
+      await db.execute('ALTER TABLE quotes ADD COLUMN folderId INTEGER');
+    }
   }
 
   Future<int> insertArtifact(Map<String, dynamic> row) async {
@@ -214,6 +256,30 @@ CREATE TABLE quotes (
   Future<List<Map<String, dynamic>>> fetchAllArtifacts() async {
     final db = await instance.database;
     return await db.query('artifacts', orderBy: 'date DESC');
+  }
+
+  Future<int> insertFolder(String name, [String category = 'notes']) async {
+    final db = await instance.database;
+    final id = await db.insert('folders', {
+      'name': name.trim(),
+      'createdAt': DateTime.now().toIso8601String(),
+      'category': category,
+    });
+    artifactUpdateNotifier.value++;
+    return id;
+  }
+
+  Future<List<Map<String, dynamic>>> fetchAllFolders() async {
+    final db = await instance.database;
+    return await db.query('folders', orderBy: 'createdAt DESC');
+  }
+
+  Future<int> deleteFolder(int id) async {
+    final db = await instance.database;
+    await db.update('artifacts', {'folderId': null}, where: 'folderId = ?', whereArgs: [id]);
+    final result = await db.delete('folders', where: 'id = ?', whereArgs: [id]);
+    artifactUpdateNotifier.value++;
+    return result;
   }
 
   Future<int> deleteArtifact(int id) async {
@@ -355,8 +421,76 @@ CREATE TABLE quotes (
     artifactUpdateNotifier.value++;
   }
 
+  /// Çizim verilerini PDF yoluna göre kaydet
+  Future<void> saveDrawingStrokes(String pdfPath, String strokesJson) async {
+    final db = await instance.database;
+    final normalized = pdfPath.trim();
+    final existing = await db.query('drawing_strokes',
+        where: 'pdfPath = ?', whereArgs: [normalized]);
+
+    if (existing.isNotEmpty) {
+      await db.update(
+        'drawing_strokes',
+        {
+          'strokesJson': strokesJson,
+          'updatedAt': DateTime.now().toIso8601String(),
+        },
+        where: 'pdfPath = ?',
+        whereArgs: [normalized],
+      );
+    } else {
+      await db.insert('drawing_strokes', {
+        'pdfPath': normalized,
+        'strokesJson': strokesJson,
+        'updatedAt': DateTime.now().toIso8601String(),
+      });
+    }
+  }
+
+  /// PDF yoluna göre kaydedilmiş çizim verilerini getir
+  Future<String?> loadDrawingStrokes(String pdfPath) async {
+    final db = await instance.database;
+    final result = await db.query('drawing_strokes',
+        where: 'pdfPath = ?', whereArgs: [pdfPath.trim()]);
+    if (result.isNotEmpty) {
+      return result.first['strokesJson'] as String?;
+    }
+    return null;
+  }
+
+  /// PDF yoluna göre çizim verilerini sil
+  Future<void> deleteDrawingStrokes(String pdfPath) async {
+    final db = await instance.database;
+    await db.delete('drawing_strokes',
+        where: 'pdfPath = ?', whereArgs: [pdfPath.trim()]);
+  }
+
   Future close() async {
     final db = await instance.database;
     db.close();
+  }
+
+  Future<int> updateArtifactFolder(int id, int? folderId) async {
+    final db = await instance.database;
+    int count = await db.update(
+      'artifacts',
+      {'folderId': folderId},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    artifactUpdateNotifier.value++;
+    return count;
+  }
+
+  Future<int> updateQuoteFolder(int id, int? folderId) async {
+    final db = await instance.database;
+    int count = await db.update(
+      'quotes',
+      {'folderId': folderId},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    artifactUpdateNotifier.value++;
+    return count;
   }
 }

@@ -6,6 +6,7 @@ class LibraryItemCard extends StatefulWidget {
   final bool hideExplanation;
   final VoidCallback onDelete;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
 
   const LibraryItemCard({
     super.key,
@@ -13,6 +14,7 @@ class LibraryItemCard extends StatefulWidget {
     this.hideExplanation = false,
     required this.onDelete,
     this.onTap,
+    this.onLongPress,
   });
 
   @override
@@ -57,6 +59,7 @@ class _LibraryItemCardState extends State<LibraryItemCard> {
       ),
       child: InkWell(
         onTap: widget.onTap,
+        onLongPress: widget.onLongPress,
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(16.0),

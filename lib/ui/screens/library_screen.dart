@@ -17,6 +17,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
   List<Map<String, dynamic>> _allArtifacts = [];
   List<Map<String, dynamic>> _filteredArtifacts = [];
+  List<Map<String, dynamic>> _folders = [];
+  int? _selectedFolderId;
+
   bool _isLoading = true;
   String _searchQuery = '';
   String _currentFilter = 'notes'; // 'notes', 'pdfs', 'quotes'
@@ -38,6 +41,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
   Future<void> _loadArtifacts() async {
     final data = await _dbHelper.fetchAllArtifacts();
     final quotesData = await _dbHelper.fetchAllQuotes();
+    final folderData = await _dbHelper.fetchAllFolders();
 
     // Convert quotes to a format similar to artifacts for unified filtering
     final formattedQuotes = quotesData.map((q) {
@@ -48,12 +52,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
         'date': q['date'],
         'pdfName': q['pdfName'],
         'type': 'quote',
+        'folderId': q['folderId'],
       };
     }).toList();
 
     if (mounted) {
       setState(() {
         _allArtifacts = [...data, ...formattedQuotes];
+        _folders = folderData;
         _allArtifacts.sort(
             (a, b) => (b['date'] as String).compareTo(a['date'] as String));
         _isLoading = false;
@@ -84,6 +90,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
       current = current.where((item) => item['type'] == 'quote').toList();
     }
 
+    if (_selectedFolderId != null) {
+      current = current.where((item) => item['folderId'] == _selectedFolderId).toList();
+    } else {
+      // Opsiyonel: selectedFolderId null ise, tümünü göster veya SADECE klasörsüz olanları göster
+      // Biz klasörsüz olanları "Tümü" olarak göstermeyi tercih edebiliriz. Tümünü gösterelim.
+    }
+
     setState(() {
       _filteredArtifacts = current;
     });
@@ -101,70 +114,128 @@ class _LibraryScreenState extends State<LibraryScreen> {
   void _showAddNoteDialog() {
     final originalTextController = TextEditingController();
     final explanationController = TextEditingController();
+    int? selectedFolderId = _selectedFolderId;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('library_add_manual'.tr(),
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: originalTextController,
-              decoration: InputDecoration(
-                hintText: 'library_add_original'.tr(),
-                filled: true,
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text('library_add_manual'.tr(),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: originalTextController,
+                decoration: InputDecoration(
+                  hintText: 'library_add_original'.tr(),
+                  filled: true,
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none),
+                ),
+                maxLines: 2,
               ),
-              maxLines: 2,
+              const SizedBox(height: 12),
+              TextField(
+                controller: explanationController,
+                decoration: InputDecoration(
+                  hintText: 'library_add_desc'.tr(),
+                  filled: true,
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none),
+                ),
+                maxLines: 4,
+              ),
+              const SizedBox(height: 12),
+              if (_folders.where((f) => (f['category'] ?? 'notes') == 'notes').isNotEmpty)
+                DropdownButtonFormField<int>(
+                  value: selectedFolderId,
+                  decoration: InputDecoration(
+                    labelText: 'Klasör (Opsiyonel)',
+                    filled: true,
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none),
+                  ),
+                  items: [
+                    const DropdownMenuItem<int>(
+                      value: null,
+                      child: Text('Klasör Yok'),
+                    ),
+                    ..._folders.where((f) => (f['category'] ?? 'notes') == 'notes').map((f) => DropdownMenuItem<int>(
+                          value: f['id'] as int,
+                          child: Text(f['name'] as String),
+                        ))
+                  ],
+                  onChanged: (val) => setDialogState(() => selectedFolderId = val),
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('library_btn_cancel'.tr(),
+                  style: const TextStyle(color: Colors.grey)),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: explanationController,
-              decoration: InputDecoration(
-                hintText: 'library_add_desc'.tr(),
-                filled: true,
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none),
+            ElevatedButton(
+              onPressed: () async {
+                final original = originalTextController.text.trim();
+                final explanation = explanationController.text.trim();
+
+                if (original.isNotEmpty && explanation.isNotEmpty) {
+                  await _dbHelper.insertArtifact({
+                    'originalText': original,
+                    'aiExplanation': explanation,
+                    'date': DateTime.now().toIso8601String(),
+                    'pdfName': 'pdf_manual_note'.tr(),
+                    'folderId': selectedFolderId,
+                  });
+                  if (!context.mounted) return;
+                  Navigator.pop(context);
+                  _loadArtifacts();
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.surface,
+                elevation: 0,
               ),
-              maxLines: 4,
+              child: Text('library_btn_save'.tr()),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _showAddFolderDialog() {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Yeni Klasör'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(hintText: 'Klasör adı'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('library_btn_cancel'.tr(),
-                style: const TextStyle(color: Colors.grey)),
+            child: const Text('İptal'),
           ),
           ElevatedButton(
             onPressed: () async {
-              final original = originalTextController.text.trim();
-              final explanation = explanationController.text.trim();
-
-              if (original.isNotEmpty && explanation.isNotEmpty) {
-                await _dbHelper.insertArtifact({
-                  'originalText': original,
-                  'aiExplanation': explanation,
-                  'date': DateTime.now().toIso8601String(),
-                  'pdfName': 'pdf_manual_note'.tr(),
-                });
+              if (controller.text.trim().isNotEmpty) {
+                await _dbHelper.insertFolder(controller.text.trim(), _currentFilter);
                 if (!context.mounted) return;
                 Navigator.pop(context);
                 _loadArtifacts();
               }
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Theme.of(context).colorScheme.surface,
-              elevation: 0,
-            ),
-            child: Text('library_btn_save'.tr()),
+            child: const Text('Oluştur'),
           ),
         ],
       ),
@@ -400,6 +471,31 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
+                    // Folders Horizontal List
+                    SizedBox(
+                      height: 50,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        children: [
+                          _buildFolderChip(theme, null, 'Tümü', _selectedFolderId == null),
+                          ..._folders
+                              .where((f) => (f['category'] ?? 'notes') == _currentFilter)
+                              .map((f) => _buildFolderChip(theme, f['id'] as int, f['name'] as String, _selectedFolderId == f['id'])),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0, top: 5, bottom: 5),
+                            child: ActionChip(
+                              avatar: const Icon(Icons.add, size: 16),
+                              label: const Text('Klasör Ekle'),
+                              onPressed: _showAddFolderDialog,
+                              backgroundColor: theme.colorScheme.surface,
+                              side: BorderSide(color: theme.colorScheme.primary.withOpacity(0.3)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
                     // List
                     Expanded(
                       child: _filteredArtifacts.isEmpty
@@ -448,10 +544,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
                                 return LibraryItemCard(
                                   item: item,
-                                  hideExplanation: _hideAllAnswers,
                                   onDelete: () =>
                                       _deleteArtifact(item['id'] as int),
                                   onTap: () => _showHistory(item),
+                                  onLongPress: () =>
+                                      _showMoveToFolderDialog(item['id'] as int, isQuote: false),
                                 );
                               },
                             ),
@@ -571,14 +668,17 @@ class _LibraryScreenState extends State<LibraryScreen> {
       child: Material(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: theme.colorScheme.tertiary.withValues(alpha: 0.3),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onLongPress: () => _showMoveToFolderDialog(item['id'] as int, isQuote: true),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: theme.colorScheme.tertiary.withValues(alpha: 0.3),
+              ),
             ),
-          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -661,6 +761,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
             ],
           ),
         ),
+        ),
       ),
     );
   }
@@ -698,6 +799,150 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   : theme.colorScheme.onSurfaceVariant),
         ],
       ),
+    );
+  }
+
+  Widget _buildFolderChip(ThemeData theme, int? id, String name, bool isSelected) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8.0),
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _selectedFolderId = id;
+            _applyFilters();
+          });
+        },
+        onLongPress: id != null ? () {
+          // Delete folder option
+          showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Klasörü Sil'),
+              content: const Text('Bu klasörü silmek istediğinize emin misiniz? İçindeki notlar silinmez, sadece klasör bağlantıları kaldırılır.'),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('İptal')),
+                TextButton(
+                  onPressed: () async {
+                    Navigator.pop(ctx);
+                    await _dbHelper.deleteFolder(id);
+                    if (_selectedFolderId == id) {
+                      _selectedFolderId = null;
+                    }
+                    _loadArtifacts();
+                  }, 
+                  child: const Text('Sil', style: TextStyle(color: Colors.red))
+                ),
+              ]
+            )
+          );
+        } : null,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isSelected ? theme.colorScheme.tertiary : theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected ? theme.colorScheme.tertiary : theme.colorScheme.surfaceContainerHighest,
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                id == null ? Icons.all_inclusive : Icons.folder_outlined,
+                size: 16,
+                color: isSelected ? theme.colorScheme.onTertiary : theme.colorScheme.onSurface,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                name,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: isSelected ? theme.colorScheme.onTertiary : theme.colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showMoveToFolderDialog(int itemId, {required bool isQuote}) {
+    final availableFolders = _folders.where((f) => (f['category'] ?? 'notes') == _currentFilter).toList();
+    
+    if (availableFolders.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Bu kategoride klasör bulunmuyor.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'Klasöre Taşı',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.folder_off),
+                title: const Text('Klasörden Çıkar (Hiçbiri)'),
+                onTap: () async {
+                  if (isQuote) {
+                    await _dbHelper.updateQuoteFolder(itemId, null);
+                  } else {
+                    await _dbHelper.updateArtifactFolder(itemId, null);
+                  }
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    _loadArtifacts();
+                  }
+                },
+              ),
+              Expanded(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: availableFolders.length,
+                  itemBuilder: (context, index) {
+                    final folder = availableFolders[index];
+                    return ListTile(
+                      leading: const Icon(Icons.folder),
+                      title: Text(folder['name']),
+                      onTap: () async {
+                        if (isQuote) {
+                          await _dbHelper.updateQuoteFolder(itemId, folder['id']);
+                        } else {
+                          await _dbHelper.updateArtifactFolder(itemId, folder['id']);
+                        }
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                          _loadArtifacts();
+                        }
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

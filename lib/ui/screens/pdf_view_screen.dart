@@ -9,6 +9,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import '../widgets/floating_tooltip.dart';
+import '../widgets/drawing_menu.dart';
+import '../widgets/drawing_overlay.dart';
+import '../widgets/drawing_models.dart';
 import '../../core/database/database_helper.dart';
 import '../../core/services/settings_service.dart';
 import '../widgets/lumoria_logo.dart';
@@ -31,7 +34,8 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
 
   File? _selectedPdfFile;
   String _pdfName = 'pdf_unknown'.tr();
-  OverlayEntry? _overlayEntry;
+  String? _tooltipText;
+  Rect? _tooltipRect;
   bool _isSavingToLibrary = false;
   bool _isLibraryPdf = false; // true ise otomatik kayıt aktif
   Timer? _autoSaveTimer;
@@ -65,6 +69,7 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
         // saved_pdfs dizinindeyse kütüphane PDF'i — oto-kayıt aktif
         _isLibraryPdf = widget.initialFilePath!.contains('saved_pdfs');
         _startMasterTimer();
+        _loadDrawingStrokes();
       }
     }
   }
@@ -182,11 +187,13 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
           SettingsService.activeSessionTime.value = 0;
           _startMasterTimer();
         });
+        _loadDrawingStrokes();
       }
     }
   }
 
   void _closePdf() {
+    _saveDrawingStrokes();
     _saveSession();
     _sessionTimer?.cancel();
     _hideTooltip();
@@ -213,8 +220,14 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
   /// Annotation değişiminde debounced otomatik kayıt (yalnızca kütüphane PDF'leri).
   void _scheduleAutoSave() {
     if (!_isLibraryPdf || _selectedPdfFile == null) return;
+
+    // Çizim modundayken PDF dosyasını serileştirmek (saveDocument)
+    // ana thread'i bloke ederek "lag/kasma" sorunlarına (Event Flooding) yol açar.
+    // Kullanıcı çizim modundan çıkana kadar oto-kayıtları duraklatıyoruz.
+    if (_drawingSettingsNotifier.value.isDrawingMode) return;
+
     _autoSaveTimer?.cancel();
-    _autoSaveTimer = Timer(const Duration(milliseconds: 800), () async {
+    _autoSaveTimer = Timer(const Duration(seconds: 2), () async {
       await _autoSaveAnnotations();
     });
   }
@@ -227,6 +240,38 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
       await _selectedPdfFile!.writeAsBytes(bytes, flush: true);
     } catch (e) {
       debugPrint('AutoSave error: $e');
+    }
+  }
+
+  /// Çizim stroke'larını SQLite'a JSON olarak kaydet
+  Future<void> _saveDrawingStrokes() async {
+    if (_selectedPdfFile == null) return;
+    final strokes = _drawingStrokesNotifier.value;
+    if (strokes.isEmpty) {
+      // Boşsa kaydı sil
+      await DatabaseHelper.instance
+          .deleteDrawingStrokes(_selectedPdfFile!.path);
+      return;
+    }
+    final json = DrawingStroke.encodeList(strokes);
+    await DatabaseHelper.instance
+        .saveDrawingStrokes(_selectedPdfFile!.path, json);
+  }
+
+  /// SQLite'tan çizim stroke'larını yükle
+  Future<void> _loadDrawingStrokes() async {
+    if (_selectedPdfFile == null) return;
+    final json = await DatabaseHelper.instance
+        .loadDrawingStrokes(_selectedPdfFile!.path);
+    if (json != null && json.isNotEmpty) {
+      try {
+        final strokes = DrawingStroke.decodeList(json);
+        _drawingStrokesNotifier.value = strokes;
+      } catch (e) {
+        debugPrint('Çizim yükleme hatası: $e');
+      }
+    } else {
+      _drawingStrokesNotifier.value = [];
     }
   }
 
@@ -295,67 +340,90 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
   }
 
   void _showTooltip(String text, Rect globalRect) {
-    _hideTooltip();
-
-    final size = MediaQuery.of(context).size;
-    final padding = MediaQuery.of(context).padding;
-
-    double tooltipWidth = 280;
-    double top = globalRect.top - 140; // Approx height
-
-    double left = globalRect.left;
-    if (left + tooltipWidth > size.width) {
-      left = size.width - tooltipWidth - 16;
+    if (mounted) {
+      setState(() {
+        _tooltipText = text;
+        _tooltipRect = globalRect;
+      });
     }
-    if (left < 16) {
-      left = 16;
-    }
-
-    if (top < padding.top + kToolbarHeight) {
-      top = globalRect.bottom + 10;
-    }
-
-    _overlayEntry = OverlayEntry(
-      builder: (context) {
-        return Stack(
-          children: [
-            // Arka plan dokunma alanı — baloncuğu kapatır
-            Positioned.fill(
-              child: GestureDetector(
-                onTap: _hideTooltip,
-                behavior: HitTestBehavior.translucent,
-                child: Container(color: Colors.transparent),
-              ),
-            ),
-            Positioned(
-              top: top,
-              left: left,
-              child: FloatingTooltip(
-                selectedText: text,
-                pdfName: _pdfName,
-                pageNumber: _currentPageNotifier.value,
-                onClose: _hideTooltip,
-              ),
-            ),
-          ],
-        );
-      },
-    );
-
-    Overlay.of(context).insert(_overlayEntry!);
   }
 
   void _hideTooltip() {
-    if (_overlayEntry != null) {
-      _overlayEntry!.remove();
-      _overlayEntry = null;
+    if (_tooltipText != null && mounted) {
+      setState(() {
+        _tooltipText = null;
+        _tooltipRect = null;
+      });
     }
+  }
+
+  Widget _buildInlineTooltip() {
+    final size = MediaQuery.of(context).size;
+    final padding = MediaQuery.of(context).padding;
+    final appBarHeight = kToolbarHeight;
+    final topOffset = padding.top + appBarHeight;
+
+    double tooltipWidth = size.width > 352 ? 320 : size.width - 32;
+    double tooltipHeight = 310;
+
+    // Convert global coordinates to local body coordinates
+    double localTargetTop = _tooltipRect!.top - topOffset;
+    double localTargetBottom = _tooltipRect!.bottom - topOffset;
+    double localTargetLeft = _tooltipRect!.left;
+
+    double left = localTargetLeft;
+    if (left + tooltipWidth > size.width - 16) {
+      left = size.width - tooltipWidth - 16;
+    }
+    if (left < 16) left = 16;
+
+    double bodyHeight = size.height - topOffset;
+    
+    double top = localTargetTop - tooltipHeight - 10;
+    
+    if (top < 16) {
+      top = localTargetBottom + 10;
+    }
+    
+    if (top + tooltipHeight > bodyHeight - 16 && top >= localTargetBottom) {
+      top = bodyHeight - tooltipHeight - 16;
+    }
+    
+    if (top < 16) top = 16;
+
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: GestureDetector(
+            onTap: _hideTooltip,
+            behavior: HitTestBehavior.translucent,
+            child: Container(color: Colors.transparent),
+          ),
+        ),
+        Positioned(
+          top: top,
+          left: left,
+          child: FloatingTooltip(
+            selectedText: _tooltipText!,
+            pdfName: _pdfName,
+            pageNumber: _currentPageNotifier.value,
+            onClose: _hideTooltip,
+          ),
+        ),
+      ],
+    );
   }
 
   final ValueNotifier<String?> _selectedTextNotifier = ValueNotifier(null);
   final ValueNotifier<Rect?> _selectedTextRectNotifier = ValueNotifier(null);
   final ValueNotifier<int> _currentPageNotifier = ValueNotifier(1);
   final ValueNotifier<int> _totalPagesNotifier = ValueNotifier(0);
+
+  // Drawing state
+  final ValueNotifier<DrawingSettings> _drawingSettingsNotifier =
+      ValueNotifier(const DrawingSettings());
+  final ValueNotifier<List<DrawingStroke>> _drawingStrokesNotifier =
+      ValueNotifier([]);
 
   // Position for draggable timer
   Offset _timerPosition = const Offset(20, 100);
@@ -373,6 +441,8 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
     _selectedTextRectNotifier.dispose();
     _currentPageNotifier.dispose();
     _totalPagesNotifier.dispose();
+    _drawingSettingsNotifier.dispose();
+    _drawingStrokesNotifier.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
@@ -418,6 +488,21 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
             }
           },
         ));
+
+    // Add drawing overlay on top of standard viewer, but before Dark Mode filter
+    // so the drawn colors are also affected by the dark mode filter appropriately
+    viewer = Stack(
+      children: [
+        viewer,
+        if (_selectedPdfFile != null)
+          DrawingOverlay(
+            settingsNotifier: _drawingSettingsNotifier,
+            strokesNotifier: _drawingStrokesNotifier,
+            pdfViewerController: _pdfViewerController,
+            onStrokeAdded: _scheduleAutoSave,
+          ),
+      ],
+    );
 
     // Dark mode filter
     if (SettingsService().isDarkMode) {
@@ -624,6 +709,42 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
                           },
                           padding: const EdgeInsets.only(right: 8),
                         ),
+                        // Çizim modu butonu
+                        ValueListenableBuilder<DrawingSettings>(
+                          valueListenable: _drawingSettingsNotifier,
+                          builder: (context, settings, _) {
+                            final isDrawing = settings.isDrawingMode;
+                            return IconButton(
+                              icon: Icon(
+                                isDrawing
+                                    ? Icons.edit_off_outlined
+                                    : Icons.edit_outlined,
+                                color: isDrawing
+                                    ? Theme.of(context).colorScheme.primary
+                                    : null,
+                              ),
+                              tooltip: 'Çizim',
+                              onPressed: () {
+                                _drawingSettingsNotifier.value =
+                                    settings.copyWith(
+                                  isDrawingMode: !isDrawing,
+                                );
+                                if (isDrawing) {
+                                  // Moddan çıkıldı — çizimleri SQLite'a kaydet
+                                  _saveDrawingStrokes();
+                                  // Ayrıca PDF annotation kaydetmeyi tetikle
+                                  _autoSaveTimer?.cancel();
+                                  _autoSaveTimer =
+                                      Timer(const Duration(milliseconds: 500),
+                                          () async {
+                                    await _autoSaveAnnotations();
+                                  });
+                                }
+                              },
+                              padding: const EdgeInsets.only(right: 8),
+                            );
+                          },
+                        ),
                         // Kütüphaneye kaydet butonu
                         _isSavingToLibrary
                             ? const Padding(
@@ -660,6 +781,15 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
                 : Stack(
                     children: [
                       _buildPdfViewer(),
+                      if (_selectedPdfFile != null)
+                        DrawingMenu(
+                          settingsNotifier: _drawingSettingsNotifier,
+                          onClearStrokes: () {
+                            _drawingStrokesNotifier.value = [];
+                            _saveDrawingStrokes();
+                            _scheduleAutoSave();
+                          },
+                        ),
                       Positioned(
                         bottom: 24,
                         left: 0,
@@ -731,6 +861,8 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
                           ),
                         ),
                       ),
+                      if (_tooltipText != null && _tooltipRect != null)
+                        _buildInlineTooltip(),
                     ],
                   ),
             floatingActionButton: _selectedPdfFile != null
@@ -769,76 +901,71 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
                                 ),
                               ),
                             ),
-                          if (selectedText != null)
+                          if (selectedText != null && _tooltipText == null)
                             Positioned(
-                              bottom: 100,
-                              right: 16,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  FloatingActionButton.extended(
-                                    onPressed: () async {
-                                      final text = _selectedTextNotifier.value;
-                                      if (text != null) {
-                                        await DatabaseHelper.instance
-                                            .insertQuote({
-                                          'quotedText': text,
-                                          'pdfName': _pdfName,
-                                          'pageNumber':
-                                              _currentPageNotifier.value,
-                                          'date':
-                                              DateTime.now().toIso8601String(),
-                                        });
-                                        _pdfViewerController.clearSelection();
-                                        _selectedTextNotifier.value = null;
-                                        _selectedTextRectNotifier.value = null;
-                                        if (context.mounted) {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            SnackBar(
-                                              content:
-                                                  Text('pdf_quote_saved'.tr()),
-                                              backgroundColor:
-                                                  theme.colorScheme.primary,
-                                              behavior:
-                                                  SnackBarBehavior.floating,
-                                            ),
-                                          );
-                                        }
-                                      }
-                                    },
-                                    icon: const Icon(Icons.format_quote),
-                                    label: Text('pdf_quote_btn'.tr(),
-                                        style: const TextStyle(
-                                            fontWeight: FontWeight.w600)),
-                                    backgroundColor: theme.colorScheme.tertiary,
-                                    foregroundColor:
-                                        theme.colorScheme.onTertiary,
-                                    heroTag: 'quote_btn',
+                              bottom: 30, // Move to bottom safe area
+                              left: 0,
+                              right: 0,
+                              child: Center(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.surface.withValues(alpha: 0.95),
+                                    borderRadius: BorderRadius.circular(30),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.15),
+                                        blurRadius: 15,
+                                        offset: const Offset(0, 5),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(width: 8),
-                                  FloatingActionButton.extended(
-                                    onPressed: () {
-                                      final text = _selectedTextNotifier.value;
-                                      final rect =
-                                          _selectedTextRectNotifier.value;
-                                      if (text != null && rect != null) {
-                                        _pdfViewerController.clearSelection();
-                                        _selectedTextNotifier.value = null;
-                                        _selectedTextRectNotifier.value = null;
-                                        _showTooltip(text, rect);
-                                      }
-                                    },
-                                    icon: const Icon(CupertinoIcons.wand_stars),
-                                    label: Text('pdf_analyze_btn'.tr(),
-                                        style: const TextStyle(
-                                            fontWeight: FontWeight.w600)),
-                                    backgroundColor: theme.colorScheme.primary,
-                                    foregroundColor: theme.colorScheme.surface,
-                                    heroTag: 'analyze_btn',
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      ElevatedButton.icon(
+                                        onPressed: () {
+                                          final text = _selectedTextNotifier.value;
+                                          if (text != null) {
+                                            _pdfViewerController.clearSelection();
+                                            _selectedTextNotifier.value = null;
+                                            _selectedTextRectNotifier.value = null;
+                                            _showSaveQuoteDialog(text);
+                                          }
+                                        },
+                                        icon: const Icon(Icons.format_quote),
+                                        label: Text('pdf_quote_btn'.tr(),
+                                            style: const TextStyle(fontWeight: FontWeight.w600)),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: theme.colorScheme.tertiary,
+                                          foregroundColor: theme.colorScheme.onTertiary,
+                                          elevation: 0,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      ElevatedButton.icon(
+                                        onPressed: () {
+                                          final text = _selectedTextNotifier.value;
+                                          final rect = _selectedTextRectNotifier.value;
+                                          if (text != null && rect != null) {
+                                            _pdfViewerController.clearSelection();
+                                            _selectedTextNotifier.value = null;
+                                            _selectedTextRectNotifier.value = null;
+                                            _showTooltip(text, rect);
+                                          }
+                                        },
+                                        icon: const Icon(CupertinoIcons.wand_stars),
+                                        label: Text('pdf_analyze_btn'.tr(),
+                                            style: const TextStyle(fontWeight: FontWeight.w600)),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: theme.colorScheme.primary,
+                                          foregroundColor: theme.colorScheme.surface,
+                                          elevation: 0,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
                             ),
                         ],
@@ -848,6 +975,88 @@ class _PdfViewScreenState extends State<PdfViewScreen> {
                 : null,
           );
         });
+  }
+
+  void _showSaveQuoteDialog(String text) async {
+    final folders = await DatabaseHelper.instance.fetchAllFolders();
+    final quoteFolders = folders.where((f) => (f['category'] ?? 'notes') == 'quotes').toList();
+    int? selectedFolderId;
+
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text('pdf_quote_btn'.tr()),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '"$text"',
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontStyle: FontStyle.italic),
+              ),
+              const SizedBox(height: 16),
+              if (quoteFolders.isNotEmpty)
+                DropdownButtonFormField<int>(
+                  value: selectedFolderId,
+                  decoration: InputDecoration(
+                    labelText: 'Klasör (Opsiyonel)',
+                    filled: true,
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none),
+                  ),
+                  items: [
+                    const DropdownMenuItem<int>(
+                      value: null,
+                      child: Text('Klasör Yok'),
+                    ),
+                    ...quoteFolders.map((f) => DropdownMenuItem<int>(
+                          value: f['id'] as int,
+                          child: Text(f['name'] as String),
+                        ))
+                  ],
+                  onChanged: (val) => setDialogState(() => selectedFolderId = val),
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('İptal'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                await DatabaseHelper.instance.insertQuote({
+                  'quotedText': text,
+                  'pdfName': _pdfName,
+                  'pageNumber': _currentPageNotifier.value,
+                  'date': DateTime.now().toIso8601String(),
+                  'folderId': selectedFolderId,
+                });
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  _pdfViewerController.clearSelection();
+                  _selectedTextNotifier.value = null;
+                  _selectedTextRectNotifier.value = null;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('pdf_quote_saved'.tr()),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              },
+              child: const Text('Kaydet'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildEmptyState(ThemeData theme) {
